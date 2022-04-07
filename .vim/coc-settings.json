@@ -1,0 +1,18 @@
+{
+  "languageserver": {
+    "go": {
+      "command": "gopls",
+      "rootPatterns": ["go.mod"],
+      "trace.server": "verbose",
+      "filetypes": ["go"]
+    }
+  },
+  "coc.preferences.formatOnSaveFiletypes": ["typescript", "typescriptreact"],
+  "eslint.autoFixOnSave": false,
+  "eslint.filetypes": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+  "coc.preferences.formatOnSaveFiletypes": [ ],
+  "tsserver.formatOnType": true,
+  "coc.preferences.formatOnType": true,
+  "diagnostic.checkCurrentLine": true
+}
+
