@@ -1,0 +1,135 @@
+" https://gist.github.com/drkdi/4e03d5828cce47d42d54f9c5507479d1
+set autoupdategist
+let completionengines = ['google', 'youtube', 'wikipedia' ]
+let qmark d = ["https://discord.com/app"]
+let qmark g = ["https://mail.google.com/mail/u/0/"]
+let qmark h = ["https://github.com/1995eaton/chromium-vim"]
+let qmark i = ["https://www.instagram.com/"]
+let qmark k = ["https://keep.google.com/u/0/"]
+let qmark m = ["https://www.messenger.com/"]
+let qmark n = ["https://www.notion.so/"]
+let qmark r = ["https://www.reddit.com/"]
+let qmark s = ["chrome://extensions/shortcuts"]
+let qmark y = ["https://www.youtube.com/"]
+let qmark e = ["https://gist.github.com/drkdi/4e03d5828cce47d42d54f9c5507479d1/edit"]
+let qmark t = ["https://slickdeals.net/", "https://www.reddit.com/", "https://www.youtube.com/"]
+let qmark v = ["https://gist.github.com/drkdi/4e03d5828cce47d42d54f9c5507479d1/edit", "https://github.com/1995eaton/chromium-vim", "chrome-extension://ihlenndgcmojhcghmfjfneahoeklbjjh/pages/options.html"]
+let qmark c = ["chrome://extensions/shortcuts"]
+let qmark w = ["https://www.netflix.com/", "https://www.hulu.com/", "https://play.hbomax.com/", "https://www.disneyplus.com/"]
+let qmark p = ["https://passwords.google.com/?hl=en-US"]
+let typelinkhintsdelay = 0
+set smoothscroll
+let scrollstep = 200
+let scrollduration = 150
+"set different up and down percent
+let fullpagescrollpercent = 60
+map d scrollFullPageDown
+"map s scrollFullPageUp
+map s scrollPageUp
+map r reloadTabUncached
+map T :buffer<Space>
+map B createBookmark
+map Q :buffer<Space>
+"map A :tabattach (autocQAomplete)
+"map z lastUsedTab
+"map Z :open<space>
+map Z :tabattach (autocQAomplete)
+map z lastUsedTab
+map A :open<space>
+"map f createActiveTabbedHint
+"map F createHint
+map F createActiveTabbedHint
+map f createHint
+map q goToInput
+map , :settings<CR>
+let blacklists = ["https://www.amazon.com/*", "https://remotedesktop.google.com/*"]
+"map O :tabattach (autocomplete)
+"map j scrollPageDown
+"map k scrollPageUp
+"map J scrollFullPageDown
+"map K scrollFullPageUp
+"map h previousTab
+"map l nextTab
+"map H goBack
+"map L goForward
+"map gs openLastLinkInTab
+"map gd :duplicate
+
+nextPage -> {{
+(function() {
+  var replaceURLNumber = function(callback) {
+    var url = document.URL.replace(/\b(\d+)(?!.*\d)\b/, callback);
+    if (url !== document.URL)
+      RUNTIME('openLink', { url: url, tab: { tabbed: false } });
+  };
+  Mappings.actions.incrementURLPath = function(repeats) {
+    replaceURLNumber(function(e) { return +e + repeats; });
+  };
+})();
+
+pattern = new RegExp('^' + settings.nextmatchpattern + '$', 'i');
+link = findFirstOf(getLinkableElements(), function(e) {
+      return e.textContent.trim() &&
+        (pattern.test(e.textContent) || pattern.test(e.getAttribute('value')));
+    })
+link ? Hints.matchPatterns(settings.nextmatchpattern) : Mappings.actions.incrementURLPath(1)
+}}
+
+
+prevPage -> {{
+(function() {
+  var replaceURLNumber = function(callback) {
+    var url = document.URL.replace(/\b(\d+)(?!.*\d)\b/, callback);
+    if (url !== document.URL)
+      RUNTIME('openLink', { url: url, tab: { tabbed: false } });
+  };
+  Mappings.actions.decrementURLPath = function(repeats) {
+    replaceURLNumber(function(e) { return Math.max(0, +e - repeats); });
+  };
+})();
+Hints.matchPatterns(settings.previousmatchpattern) || Mappings.actions.decrementURLPath(1)
+}}
+
+" doesn't make sense lol, w-e and E-R should be adjusted
+"map R :call nextPage<CR>
+"map E :call prevPage<CR>
+map e nextTab
+map w previousTab
+map R :call nextPage<CR>
+map E :call prevPage<CR>
+"map E previousMatchPattern
+"map R nextMatchPattern
+map t :buffer<space>
+map a :tabnew<space>
+map i :open|<space>
+map mm muteTab
+map <C-j> backwardChar
+map <C-k> forwardChar
+
+imap <C-s> backwardChar
+imap <C-d> forwardChar
+imap <C-f> forwardWord
+"set ma to mark location a
+
+map 0 firstTab
+map $ lastTab
+map m* setMark
+"hardcoded for other mfin tasks
+map mf createMultiHint
+map mr reloadAllTabs
+map c :open|<space>
+map C :open| @" <space> <CR>
+
+
+
+"pass params when search engine won't autofocus, figure out autofocus and autocomplete
+let searchengine 1 = "https://1337x.to/search/%s/1/"
+
+hintIncognito(link) -> {{
+ RUNTIME('openLinkWindow', {
+      url: link.href,
+      incognito: true
+    });
+}}
+"change c to manual, C for hint, paste?
+map c createScriptHint(hintIncognito)

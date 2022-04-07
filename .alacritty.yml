@@ -1,0 +1,193 @@
+window:
+  decorations: None
+
+scrolling:
+  multiplier: 5
+
+window.opacity: 0.97
+
+font:
+  normal:
+    #family: CozetteVector
+    family: Dank Mono
+    #family: monofur for Powerline
+    style: Regular
+    #family: Menlo
+
+  bold:
+    family: Menlo
+    style: Bold
+
+  italic:
+    family: Menlo
+    style: Italic
+
+
+  # Point size
+  size: 14.0
+
+env:
+  TERM: xterm-256color
+
+#colors:
+    #primary:
+      #background: '0x16171E'
+      #foreground: '0xD1D2D3'
+
+      #cursor:
+        #text: '0xFEFFFF'
+        #cursor: '0xc7c7c7'
+
+        ## Normal colors
+      #normal:
+        #black: '0x000000'
+        #red: '0xE68E8E'
+        #green: '0x83AC8E'
+        #yellow: '0xF5B78A'
+        #blue: '0x9BB8DC'
+        #magenta: '0xBAACE2'
+        #cyan: '0x00C5C7'
+        #white: '0xC7C7C7'
+
+        ## Bright colors
+      #bright:
+        #black: '0x676767'
+        #red: '0xFF6D67'
+        #green: '0x5FF967'
+        #yellow: '0xFEFB67'
+        #blue: '0x6871FF'
+        #magenta: '0xFF76FF'
+        #cyan: '0x5FFDFF'
+        #white: '0xFEFFFF'
+
+  # horizon
+#colors:
+  ## Primary colors
+  #primary:
+    #background: '0x1c1e26'
+    #foreground: '0xe0e0e0'
+
+    ## Normal colors
+  #normal:
+    #black: '0x16161c'
+    #red: '0xe95678'
+    #green: '0x29d398'
+    #yellow: '0xfab795'
+    #blue: '0x26bbd9'
+    #magenta: '0xee64ac'
+    #cyan: '0x59e1e3'
+    #white: '0xd5d8da'
+
+    ## Bright colors
+  #bright:
+    #black: '0x5b5858'
+    #red: '0xec6a88'
+    #green: '0x3fdaa4'
+    #yellow: '0xfbc3a7'
+    #blue: '0x3fc4de'
+    #magenta: '0xf075b5'
+    #cyan: '0x6be4e6'
+    #white: '0xd5d8da'
+
+#key_bindings:
+  #- { key: Back, mods: Super, chars: "\x15" }
+
+colors:
+  primary:
+    background: '#1c2029'
+    foreground: '#d8dee9'
+    dim_foreground: '#a5abb6'
+  cursor:
+    text: '#2e3440'
+    cursor: '#d8dee9'
+  vi_mode_cursor:
+    text: '#2e3440'
+    cursor: '#d8dee9'
+  selection:
+    text: CellForeground
+    background: '#4c566a'
+  search:
+    matches:
+      foreground: CellBackground
+      background: '#88c0d0'
+    bar:
+      background: '#434c5e'
+      foreground: '#d8dee9'
+  normal:
+    black: '#3b4252'
+    red: '#bf616a'
+    green: '#a3be8c'
+    yellow: '#ebcb8b'
+    blue: '#81a1c1'
+    magenta: '#b48ead'
+    cyan: '#88c0d0'
+    white: '#e5e9f0'
+  bright:
+    black: '#4c566a'
+    red: '#bf616a'
+    green: '#a3be8c'
+    yellow: '#ebcb8b'
+    blue: '#81a1c1'
+    magenta: '#b48ead'
+    cyan: '#8fbcbb'
+    white: '#eceff4'
+  dim:
+    black: '#373e4d'
+    red: '#94545d'
+    green: '#809575'
+    yellow: '#b29e75'
+    blue: '#68809a'
+    magenta: '#8c738c'
+    cyan: '#6d96a5'
+    white: '#aeb3bb'
+
+#schemes:
+  #everforest_dark_hard: &everforest_dark_hard
+    #primary:
+      #background: '#2b3339'
+      #foreground: '#d3c6aa'
+      #dim_foreground: '#a5abb6'
+  #cursor:
+    #text: '#2e3440'
+    #cursor: '#d8dee9'
+  #vi_mode_cursor:
+    #text: '#2e3440'
+    #cursor: '#d8dee9'
+  #selection:
+    #text: CellForeground
+    #background: '#4c566a'
+  #search:
+    #matches:
+      #foreground: CellBackground
+      #background: '#88c0d0'
+    #bar:
+      #background: '#434c5e'
+      #foreground: '#d8dee9'
+    #normal:
+      #black:   '#4b565c'
+      #red:     '#e67e80'
+      #green:   '#a7c080'
+      #yellow:  '#dbbc7f'
+      #blue:    '#7fbbb3'
+      #magenta: '#d699b6'
+      #cyan:    '#83c092'
+      #white:   '#d3c6aa'
+    #bright:
+      #black:   '#4b565c'
+      #red:     '#e67e80'
+      #green:   '#a7c080'
+      #yellow:  '#dbbc7f'
+      #blue:    '#7fbbb3'
+      #magenta: '#d699b6'
+      #cyan:    '#83c092'
+      #white:   '#d3c6aa'
+    #dim:
+      #black: '#373e4d'
+      #red: '#94545d'
+      #green: '#809575'
+      #yellow: '#b29e75'
+      #blue: '#68809a'
+      #magenta: '#8c738c'
+      #cyan: '#6d96a5'
+      #white: '#aeb3bb'
+#colors: *everforest_dark_hard
