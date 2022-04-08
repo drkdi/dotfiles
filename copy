@@ -58,6 +58,12 @@ else
 #   mkdir ~/tmp-files
 #   unzip ~/Downloads/tmp-files.zip -d ~/tmp-files
 
+    function unzip() {
+        echo "unzippin to ~/ root directory"
+        unzip -o ~/Downloads/tmp-files.zip -d ~
+
+    }
+
     if [ $1 = "setup" ]
         then
             echo "setting up for the first time"
@@ -72,8 +78,13 @@ else
 
             echo "installing fonts"
             ls -t  ~/*.otf | tail -n +1 | xargs open
+            unzip
+    elif [ $1 = "paste" ]
+        then
+            unzip
+    elif [ $1 = "dotfile" ] 
+        then
+            unzip 
     fi
 
-    echo "unzippin to ~/ root directory"
-    unzip -o ~/Downloads/tmp-files.zip -d ~
 fi
