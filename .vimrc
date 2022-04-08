@@ -243,9 +243,10 @@ colorscheme nord
 au ColorScheme * hi Normal ctermbg=None
 
 if exists('+termguicolors')
-  let &t_8f="\<Esc>[38;2;%lu;%lu;%lum"
-  let &t_8b="\<Esc>[48;2;%lu;%lu;%lum"
+  let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
+  let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
   set termguicolors
+
 endif
 
 
@@ -441,8 +442,8 @@ endfunction
   noremap U <C-r><CR>
 
 " autocomplete
-  imap bp binding.pry
-  imap bpp <%= binding.pry %>
+  "imap bp binding.pry
+  "imap bpp <%= binding.pry %>
 
 
 " delete empty lines in visual
@@ -766,3 +767,4 @@ autocmd VimLeave * call system("tmux setw automatic-rename")
 
 " typescript regex for vim8
 set re=0
+

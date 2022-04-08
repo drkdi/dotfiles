@@ -19,8 +19,11 @@
 
 
 #plugins=(git)
-export ZSH="/Users/derek.dai/.oh-my-zsh"
-source $ZSH/oh-my-zsh.sh
+
+# update for work, nested
+#source ~/zsh-syntax-highlighting
+
+export ZSH="/Users/.oh-my-zsh.sh"
 ZSH_THEME=""
 CASE_SENSITIVE="false"
 HYPHEN_INSENSITIVE="true"
@@ -29,7 +32,6 @@ fpath+=/opt/homebrew/share/zsh/site-functions
 fpath+=$HOME/.zsh/pure
 
 autoload -U promptinit; promptinit
-source ~/zsh-syntax-highlighting
 prompt pure
 
 #_______GIT STUFF_________
@@ -56,8 +58,23 @@ alias go="vim $(git status --porcelain | awk '{print $2}')"
 alias mux='tmuxinator'
 alias tmux='TERM=screen-256color tmux'
 alias r='ranger'
+alias copy='bash copy'
 
-alias copy='bash ~/copy'
+# hardcoded version
+# sed -i '' 's/nord0_gui = .*/nord0_gui = "#1b1e24"/g' ~/.vim/autoload/nord-vim/colors/nord.vim
+# -i in place, '' s/ substitute, $1 $2 parameters, \" escapes
+function personal() {
+    function replaceEqual() {
+        sed -i '' "s/$1 = .*/$1 = \"$2\"/g" ~/.vim/autoload/nord-vim/colors/nord.vim
+    }
+    replaceEqual "nord0_gui" "#1b1e24"
+
+    function replaceColon() {
+        sed -i '' "s/$1: .*/$1: $2/g" ~/.alacritty.yml
+    }
+    replaceColon "size" "14.0"
+    echo "updated personal"
+}
 
 #alias nah="git reset --hard"
 
