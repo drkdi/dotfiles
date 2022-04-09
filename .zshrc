@@ -112,9 +112,10 @@ function gacp() {
     git push
 }
 
-function rb() {
-  git ls-files -m | xargs ls -1 2>/dev/null | grep '\.rb$' | xargs rubocop -a
-}
+#function rb() {
+  #git ls-files -m | xargs ls -1 2>/dev/null | grep '\.rb$' | xargs rubocop -a
+#}
+
 # broken by vim-startify
 function changed() {
   vim -O $(git status --porcelain | awk '{print $2}')
