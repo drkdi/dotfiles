@@ -206,26 +206,26 @@ inoremap <silent><expr> <cr> pumvisible() ? coc#_select_confirm()
                               \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
 
 
-let g:coc_global_extensions = ['coc-json', 'coc-git']
+"let g:coc_global_extensions = ['coc-json', 'coc-git']
 "global_extensions = [ 'coc-tsserver' ] 
 nmap <silent> gd <Plug>(coc-definition)
 nmap <silent> gy <Plug>(coc-type-definition)
 nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
 
-let g:coc_global_extensions = [
-  \ 'coc-tsserver'
-  \ ]
-if isdirectory('./node_modules') && isdirectory('./node_modules/prettier')
-  let g:coc_global_extensions += ['coc-prettier']
-endif
+"let g:coc_global_extensions = [
+  "\ 'coc-tsserver'
+  "\ ]
+"if isdirectory('./node_modules') && isdirectory('./node_modules/prettier')
+  "let g:coc_global_extensions += ['coc-prettier']
+"endif
 
-" Add CoC ESLint if ESLint is installed
-if isdirectory('./node_modules') && isdirectory('./node_modules/eslint')
-  let g:coc_global_extensions += ['coc-eslint']
-endif
+"" Add CoC ESLint if ESLint is installed
+"if isdirectory('./node_modules') && isdirectory('./node_modules/eslint')
+  "let g:coc_global_extensions += ['coc-eslint']
+"endif
 
-command! -nargs=0 Format :call CocActionAsync('format')
+"command! -nargs=0 Format :call CocActionAsync('format')
 
 
 
