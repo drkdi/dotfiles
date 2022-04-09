@@ -1,27 +1,12 @@
 #!/bin/zsh
+#symlink
 
 
 #todo:
 # CREATE ..3, repeat .. 3 times
 # automatically create alias, takes input and current directory, append to TC
 
-
-# new machine:
-# defaults write -g InitialKeyRepeat -int 10 
-#   normal minimum is 15 (225 ms)
-# defaults write -g KeyRepeat -int 1 
-#   normal minimum is 2 (30 ms)
-#defaults write -g ApplePressAndHoldEnabled -bool false
-
-
-#_______ZSH STUFF_________
-
-
-
 #plugins=(git)
-
-# update for work, nested
-#source ~/zsh-syntax-highlighting
 
 export ZSH="/Users/.oh-my-zsh.sh"
 ZSH_THEME=""
@@ -34,6 +19,7 @@ fpath+=$HOME/.zsh/pure
 autoload -U promptinit; promptinit
 prompt pure
 
+
 #_______GIT STUFF_________
 alias g='git'
 alias gi='git init'
@@ -44,6 +30,7 @@ alias gc='git commit -m'
 alias gp='git pull'
 alias gco='git checkout'
 alias gcom='git checkout master'
+alias gcor='git checkout release'
 alias gcob='git checkout -b'
 alias gm='git merge'
 alias gst='git stash'
@@ -59,6 +46,20 @@ alias mux='tmuxinator'
 alias tmux='TERM=screen-256color tmux'
 alias r='ranger'
 alias copy='bash copy'
+alias dotfiles='. ./copy dotfiles'
+
+alias s='spt'
+alias n='spt playback -n'
+alias p='spt playback -p'
+alias pp='spt playback -t'
+
+
+function pb() {
+    echo "$@" | pb
+}
+alias file='fzf | pbcopy'
+
+#alias file='find . -type f -name "*$*";'
 
 # hardcoded version
 # sed -i '' 's/nord0_gui = .*/nord0_gui = "#1b1e24"/g' ~/.vim/autoload/nord-vim/colors/nord.vim
@@ -67,11 +68,13 @@ function personal() {
     function replaceEqual() {
         sed -i '' "s/$1 = .*/$1 = \"$2\"/g" ~/.vim/autoload/nord-vim/colors/nord.vim
     }
-    replaceEqual "nord0_gui" "#1b1e24"
 
     function replaceColon() {
         sed -i '' "s/$1: .*/$1: $2/g" ~/.alacritty.yml
     }
+    
+    source ~/.zshrc
+    replaceEqual "nord0_gui" "#1e232b"
     replaceColon "size" "14.0"
     echo "updated personal"
 }
@@ -103,7 +106,7 @@ function gac() {
 }
 function gacp() {
     #git ls-files -m | xargs ls -1 2>/dev/null | grep '\.rb$' | xargs rubocop -a
-    yarn lint --fix
+    #yarn lint --fix
     git add .
     git commit -a -m "$1"
     git push
@@ -147,8 +150,8 @@ function qq() {
 alias sz='source $HOME/.zshrc ; echo "sourced .zshrc"'
 alias ve='v $HOME/.vimrc'
 alias ze='v $HOME/.zshrc'
-alias te='v $HOME/.tc_settings'
-alias n='vim "+normal Go" $HOME/notes.md'
+alias ce='v $HOME/copy'
+#alias n='vim "+normal Go" $HOME/notes.md'
 #alias n='vim "+normal G$" +startinsert $HOME/notes.md'
 
 # tags

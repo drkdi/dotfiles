@@ -1,5 +1,7 @@
 alacritty
 bettertouchtool
+cmatrix
+dust
 fzf
 git
 grep
@@ -11,6 +13,8 @@ pure
 ranger
 redis
 ripgrep
+spotify
+spotify-tui
 tmux
 tmuxinator
 vim

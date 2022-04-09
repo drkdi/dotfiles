@@ -29,8 +29,6 @@ if [ $# -eq 0 ]
         echo "movin directories"
         mkdir ~/tmp-files/.tmux
         cp -R ~/.tmux ~/tmp-files
-        cp -R ~/.config/tmuxinator ~/tmp-files/.config
-        mkdir -p ~/tmp-files/.config/tmuxinator
         mkdir ~/tmp-files/.vim
         cp ~/.vim/coc-settings.json ~/tmp-files/.vim/coc-settings.json
 
@@ -43,6 +41,9 @@ if [ $# -eq 0 ]
         #cp ~/Derek.bettertouchtool ~/tmp-files/Derek.bettertouchtool
         #cp ~/DankMono-Regular.otf ~/tmp-files/DankMono-Regular.otf
         #cp ~/DankMono-Italic.otf ~/tmp-files/DankMono-Italic.otf
+        #mkdir -p ~/tmp-files/.config/tmuxinator
+        #cp -R ~/.config/tmuxinator ~/tmp-files/.config
+
 
 
         echo "cleaning up"
@@ -58,10 +59,9 @@ else
 #   mkdir ~/tmp-files
 #   unzip ~/Downloads/tmp-files.zip -d ~/tmp-files
 
-    function unzip() {
+    function unzippem() {
         echo "unzippin to ~/ root directory"
-        unzip -o ~/Downloads/tmp-files.zip -d ~
-
+        unzip -o ~/Downloads/tmp-files.zip -d ~/Downloads/tmp-files
     }
 
     if [ $1 = "setup" ]
@@ -79,12 +79,33 @@ else
             echo "installing fonts"
             ls -t  ~/*.otf | tail -n +1 | xargs open
             unzip
+
+            echo "keyboard stuff"
+            defaults write -g InitialKeyRepeat -int 10 
+            #   normal minimum is 15 (225 ms)
+            defaults write -g KeyRepeat -int 1 
+            #   normal minimum is 2 (30 ms)
+            defaults write -g ApplePressAndHoldEnabled -bool false
+
+
     elif [ $1 = "paste" ]
         then
-            unzip
+            mkdir -p ~/tmp-files & unzip -o ~/Downloads/tmp-files.zip -d ~/Downloads/tmp-files
+
+            # vim command: do (other into current) / dp (current into other)
+            for files in $(diff -rq ~ ~/Downloads/tmp-files|grep 'differ$'|sed "s/^Files //g;s/ differ$//g;s/ and /:/g"); do
+                vimdiff ${files%:*} ${files#*:};
+            done
     elif [ $1 = "dotfile" ] 
         then
-            unzip 
+            echo "finding path"
+
+            for DIR in $(find ~/Desktop -type d -name "dotfiles")
+            do   
+                unzip -o ~/Downloads/tmp-files.zip -d "$DIR"
+                cd $DIR
+                gacp "add "
+            done
     fi
 
 fi
