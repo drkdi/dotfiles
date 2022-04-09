@@ -5,25 +5,19 @@ window:
 scrolling:
   multiplier: 5
 
-
 font:
   normal:
     #family: CozetteVector
-    family: Dank Mono
-    #family: monofur for Powerline
-    style: Regular
     #family: Menlo
-
+    #family: monofur for Powerline
+    family: Dank Mono
+    style: Regular
   bold:
     family: Menlo
     style: Bold
-
   italic:
     family: Menlo
     style: Italic
-
-
-  # Point size
   size: 14.0
 
 draw_bold_text_with_bright_colors: true
@@ -36,38 +30,7 @@ cursor:
 env:
   TERM: xterm-256color
 
-#colors:
-    #primary:
-      #background: '0x16171E'
-      #foreground: '0xD1D2D3'
-
-      #cursor:
-        #text: '0xFEFFFF'
-        #cursor: '0xc7c7c7'
-
-        ## Normal colors
-      #normal:
-        #black: '0x000000'
-        #red: '0xE68E8E'
-        #green: '0x83AC8E'
-        #yellow: '0xF5B78A'
-        #blue: '0x9BB8DC'
-        #magenta: '0xBAACE2'
-        #cyan: '0x00C5C7'
-        #white: '0xC7C7C7'
-
-        ## Bright colors
-      #bright:
-        #black: '0x676767'
-        #red: '0xFF6D67'
-        #green: '0x5FF967'
-        #yellow: '0xFEFB67'
-        #blue: '0x6871FF'
-        #magenta: '0xFF76FF'
-        #cyan: '0x5FFDFF'
-        #white: '0xFEFFFF'
-
-  # horizon
+# horizon
 #colors:
   ## Primary colors
   #primary:
@@ -149,9 +112,24 @@ colors:
     white: '#aeb3bb'
 
 key_bindings:
-    - { key: L,     mods: Command|Shift, chars: "\x06\x6a" }
-    - { key: J,     mods: Command,       chars: "\x06\x6a" }
-    - { key: K,     mods: Command,       chars: "\x06\x6b" }
+    # ctrl+b n
+    - { key: K,     mods: Command|Shift, chars: "\x02\x6e" }
+    # ctrl+b p
+    - { key: J,     mods: Command|Shift, chars: "\x02\x70" }
 
+    # ctrl+b %
+    - { key: L,     mods: Command|Shift, chars: "\x02\x25" }
+    # ctrl+b "
+    - { key: H,     mods: Command|Shift, chars: "\x02\x22" }
 
+    # ctrl+b x
+    - { key: H,     mods: Command|Shift, chars: "\x02\x78" }
+
+    # ctrl+b %
+    # vim
+    - { key: H,     mods: Command,       chars: "\x08" }
+    - { key: L,     mods: Command,       chars: "\x0c" }
+
+    - { key: J,     mods: Command,       chars: "\x0a" }
+    - { key: K,     mods: Command,       chars: "\x0b" }
 

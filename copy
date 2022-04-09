@@ -35,6 +35,8 @@ function copy_create_zip() {
     cp -R ~/.tmux ~/tmp-files
     mkdir ~/tmp-files/.vim
     cp ~/.vim/coc-settings.json ~/tmp-files/.vim/coc-settings.json
+    cp ~/.vim/plugins.vim ~/tmp-files/.vim/plugins.vim
+    cp ~/.vim/coc-plugin.vim ~/tmp-files/.vim/coc-plugin.vim
 
     echo "delete all other than most recent bttpreset, copy to tmp-file, then delete"
     ls -t  ~/Downloads/*.bttpreset | tail -n +2 | xargs rm -f
@@ -103,12 +105,17 @@ function setup() {
 
 function paste() {
     rm ~/*.bttpreset
-    mkdir -p ~/tmp-files & unzip -o ~/Downloads/tmp-files.zip -d ~/Downloads/tmp-files
 
-    # vim command: do (other into current) / dp (current into other)
-    for files in $(diff -rq ~ ~/Downloads/tmp-files|grep 'differ$'|sed "s/^Files //g;s/ differ$//g;s/ and /:/g"); do
-        vimdiff ${files%:*} ${files#*:};
-    done
+    if [[ $2 == *"force"* ]]
+        then
+        unzip -o ~/Downloads/tmp-files.zip -d ~
+    else
+        # vim command: do (other into current) / dp (current into other)
+        mkdir -p ~/tmp-files & unzip -o ~/Downloads/tmp-files.zip -d ~/Downloads/tmp-files
+            for files in $(diff -rq ~ ~/Downloads/tmp-files|grep 'differ$'|sed "s/^Files //g;s/ differ$//g;s/ and /:/g"); do
+                vimdiff ${files%:*} ${files#*:};
+            done
+    fi
 }
 
 function save_dotfiles() {
