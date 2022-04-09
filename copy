@@ -61,7 +61,7 @@ else
 
     function unzippem() {
         echo "unzippin to ~/ root directory"
-        unzip -o ~/Downloads/tmp-files.zip -d ~/Downloads/tmp-files
+        unzip -o ~/Downloads/tmp-files.zip -d ~
     }
 
     if [ $1 = "setup" ]
@@ -78,7 +78,7 @@ else
 
             echo "installing fonts"
             ls -t  ~/*.otf | tail -n +1 | xargs open
-            unzip
+            unzippem
 
             echo "keyboard stuff"
             defaults write -g InitialKeyRepeat -int 10 
@@ -88,24 +88,27 @@ else
             defaults write -g ApplePressAndHoldEnabled -bool false
 
 
-    elif [ $1 = "paste" ]
+    elif [[ $1 == *"paste"* ]]
         then
-            mkdir -p ~/tmp-files & unzip -o ~/Downloads/tmp-files.zip -d ~/Downloads/tmp-files
+            rm ~/*.bttpreset
+            #mkdir -p ~/tmp-files & unzip -o ~/Downloads/tmp-files.zip -d ~/Downloads/tmp-files
+            unzippem
 
             # vim command: do (other into current) / dp (current into other)
             for files in $(diff -rq ~ ~/Downloads/tmp-files|grep 'differ$'|sed "s/^Files //g;s/ differ$//g;s/ and /:/g"); do
                 vimdiff ${files%:*} ${files#*:};
             done
-    elif [ $1 = "dotfile" ] 
+
+    elif [[ $1 == *"dotfile"* ]] 
+        # need to use '. ./copy dotfiles' with double [[ for current path to cd
         then
             echo "finding path"
-
             for DIR in $(find ~/Desktop -type d -name "dotfiles")
-            do   
-                unzip -o ~/Downloads/tmp-files.zip -d "$DIR"
-                cd $DIR
-                gacp "add "
-            done
+                do   
+                    unzip -o ~/Downloads/tmp-files.zip -d "$DIR"
+                    cd $DIR
+                    gacp "update"
+                done
     fi
 
 fi
