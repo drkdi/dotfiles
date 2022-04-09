@@ -105,8 +105,9 @@ else
             echo "finding path"
             for DIR in $(find ~/Desktop -type d -name "dotfiles")
                 do   
+                    cd $DIR 
+                    rm *.bttpreset
                     unzip -o ~/Downloads/tmp-files.zip -d "$DIR"
-                    cd $DIR
                     gacp "update"
                 done
     fi
