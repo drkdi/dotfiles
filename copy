@@ -27,6 +27,11 @@ function copy_create_zip() {
     cp ~/settings.json ~/tmp-files/settings.json
     cp ~/.brew ~/tmp-files/.brew
 
+    echo "cvim"
+    mkdir ~/tmp-files/cvim
+    git clone https://gist.github.com/drkdi/4e03d5828cce47d42d54f9c5507479d1 ~/tmp-files/cvim
+    rm -rf ~/tmp-files/cvim/.git
+
     echo "inception"
     cp ~/copy ~/tmp-files/copy
 

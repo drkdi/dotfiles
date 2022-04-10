@@ -76,6 +76,13 @@
 
 " ##################################### MAPS  #########################################################
 
+" BEFORE I FORGET
+" delete empty lines in visual
+  vnoremap de :g/^\s*$/d<CR>:noh<CR>  
+
+
+
+
 " text 
   map <Space> <Leader>
   let mapleader = "\<Space>"
@@ -138,9 +145,6 @@
   xmap z <Plug>(interactiveJoin)
   nmap gJ <Plug>(interactiveGJoin)
   xmap gJ <Plug>(interactiveGJoin)
-
-" delete empty lines in visual
-  vnoremap de :g/^\s*$/d<CR>:noh<CR>  
 
 " autocomplete
   "imap bp binding.pry
@@ -461,9 +465,9 @@ nnoremap <silent> <leader>gs :vertical Gstatus<CR>
 nnoremap <silent> <leader>gb :Git blame<CR>
 
 let g:signify_line_highlight = 1
-highlight SignifyLineAdd ctermfg=Black ctermbg=Black guibg=#226823
-highlight SignifyLineChange ctermfg=Black ctermbg=DarkYellow guibg=#685a22
-highlight SignifyLineDelete ctermfg=Black ctermbg=DarkRed guibg=#682b22
+highlight SignifyLineAdd ctermfg=Black ctermbg=Black guibg=#415d41
+highlight SignifyLineChange ctermfg=Black ctermbg=Yellow guibg=#685a22
+highlight SignifyLineDelete ctermfg=Black ctermbg=Red guibg=#682b22
 
 map <leader>l :RainbowLevelsToggle<cr>
 let &runtimepath = '~/.vim/bundle/rainbow,' . &runtimepath

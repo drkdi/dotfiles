@@ -112,6 +112,7 @@ colors:
     white: '#aeb3bb'
 
 key_bindings:
+#xxd -psd
     # ctrl+b n
     - { key: K,     mods: Command|Shift, chars: "\x02\x6e" }
     # ctrl+b p
@@ -132,4 +133,4 @@ key_bindings:
 
     - { key: J,     mods: Command,       chars: "\x0a" }
     - { key: K,     mods: Command,       chars: "\x0b" }
-
+    - { key: D,     mods: Command,       chars: "\x04" }
