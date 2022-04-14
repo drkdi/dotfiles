@@ -134,3 +134,4 @@ key_bindings:
     - { key: J,     mods: Command,       chars: "\x0a" }
     - { key: K,     mods: Command,       chars: "\x0b" }
     - { key: D,     mods: Command,       chars: "\x04" }
+    - { key: Space,  mods: Shift,  action: ToggleViMode }

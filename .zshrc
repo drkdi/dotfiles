@@ -20,7 +20,7 @@ autoload -U promptinit; promptinit
 prompt pure
 
 export TERM="xterm-256color"
-export EDITOR='vim'
+export EDITOR='nvim'
 set editing-mode v
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
@@ -50,19 +50,21 @@ export PSQL_PAGER="less -S"
     alias gf='git checkout `git branch --format="%(refname:short)" | fzf`'
     alias gdel='git branch -d'
     alias gpom='git pull origin master'
-    alias go="vim $(git status --porcelain | awk '{print $2}')"
+    alias go="nvim $(git status --porcelain | awk '{print $2}')"
 
 #   vim
     alias mux='tmuxinator'
     alias tmux='TERM=screen-256color tmux'
-    alias v='vim -S ~/.vimrc'
+    alias v='nvim -S ~/.vimrc'
     alias vim='vim -S ~/.vimrc'
     alias ve='v $HOME/.vimrc'
     alias ze='v $HOME/.zshrc'
     alias ce='v $HOME/copy'
     alias vf='v "$(fzf)"'
     alias ae='v $HOME/.alacritty.yml'
-    alias te='vim $HOME/.tmux.conf'
+    alias te='v $HOME/.tmux.conf'
+    alias pe='v $HOME/.vim/plugins.vim'
+
 
 
 #   etc
@@ -78,7 +80,8 @@ export PSQL_PAGER="less -S"
     alias file='fzf | pbcopy'
     alias sz='source $HOME/.zshrc ; echo "sourced .zshrc"'
     alias ctags="`brew --prefix`/bin/ctags"
-    alias t='vim -t "$(cut -f1 tags | tail +7 | uniq | fzf)"'
+    alias t='tmux'
+    #alias t='vim -t "$(cut -f1 tags | tail +7 | uniq | fzf)"'
     alias tags="ctags -R --exclude=node_modules --exclude=public --exclude=vendor --exclude=db --exclude=tmp"
 #   alias n='vim "+normal Go" $HOME/notes.md'
 #   alias n='vim "+normal G$" +startinsert $HOME/notes.md'

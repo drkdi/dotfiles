@@ -12,7 +12,7 @@ Plug 'mhinz/vim-startify'
 " syntax
 Plug 'tpope/vim-sensible'
 " deletes around ) , etc
-Plug 'wellle/targets.vim'
+"Plug 'wellle/targets.vim'
 " keep pressing f for find
 Plug 'rhysd/clever-f.vim'
 " automatically closes quotes
@@ -55,16 +55,14 @@ Plug 'pangloss/vim-javascript'    " JavaScript support
 Plug 'leafgarland/typescript-vim' " TypeScript syntax
 Plug 'maxmellon/vim-jsx-pretty'   " JS and JSX syntax
 " theme
-Plug 'vim-airline/vim-airline'
-Plug 'vim-airline/vim-airline-themes'
-Plug 'edkolev/tmuxline.vim'
-Plug 'gkeep/iceberg-dark'
-"let g:tmuxline_preset = 'minimal'
+"Plug 'vim-airline/vim-airline'
+"Plug 'vim-airline/vim-airline-themes'
+"Plug 'gkeep/iceberg-dark'
 "let g:airline_theme='everforest'
 
 Plug 'cocopon/iceberg.vim'
-Plug 'thiagoalessio/rainbow_levels.vim'
-Plug 'luochen1990/rainbow'
+"Plug 'thiagoalessio/rainbow_levels.vim'
+"Plug 'luochen1990/rainbow'
 
 "Plug 'junegunn/seoul256.vim'
 "colo seoul256
@@ -101,7 +99,11 @@ Plug 'arcticicestudio/nord-vim'
 "phraseapp YML specific
 Plug 'airblade/vim-localorie'
 " yank yml file key
-Plug 'sainnhe/everforest'
+Plug 'airblade/vim-localorie'
 
+"Show where marks are
 Plug 'kshenoy/vim-signature'
 
+"nvim specific
+Plug 'nvim-treesitter/nvim-treesitter'
+Plug 'neovim/nvim-lspconfig'

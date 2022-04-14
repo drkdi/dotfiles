@@ -29,13 +29,11 @@ let qmark p = ["https://passwords.google.com/?hl=en-US"]
 let blacklists = ["https://www.amazon.com/*", "https://remotedesktop.google.com/*"]
 
 
-map 0 firstTab
 map a :tabnew<space>
 map A :open<space>
 map b createBookmark
 map B :bookmarks
 map c createScriptHint(hintIncognito)
-map c :open|<space>
 map C :open| @" <space> <CR>
 map d scrollFullPageDown
 map e nextTab
@@ -59,9 +57,12 @@ map w previousTab
 map z lastUsedTab
 map Z :tabattach (autocQAomplete)
 
-
-map , :settings<CR>
+map 0 firstTab
 map $ lastTab
+map , :settings<CR>
+map = zoomPageIn
+map - zoomPageOut
+
 imap <C-d> forwardChar
 map <C-j> backwardChar
 map <C-k> forwardChar
@@ -72,6 +73,7 @@ imap <C-f> forwardWord
 "map z lastUsedTab
 "map Z :open<space>
 "map f createActiveTabbedHint
+"map c :open|<space>
 "map F createHint
 "map O :tabattach (autocomplete)
 "map j scrollPageDown
@@ -89,7 +91,6 @@ imap <C-f> forwardWord
 "map E previousMatchPattern
 "map R nextMatchPattern
 "change c to manual, C for hint, paste?
-Hints.matchPatterns(settings.previousmatchpattern) || Mappings.actions.decrementURLPath(1)
 
 nextPage -> {{
   (function() {
@@ -101,6 +102,7 @@ nextPage -> {{
     Mappings.actions.incrementURLPath = function(repeats) {
       replaceURLNumber(function(e) { return +e + repeats; });
     };
+    Hints.matchPatterns(settings.previousmatchpattern) || Mappings.actions.decrementURLPath(1)
 })();
 
 pattern = new RegExp('^' + settings.nextmatchpattern + '$', 'i');

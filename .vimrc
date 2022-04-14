@@ -1,4 +1,12 @@
 " ##################################### PLUGS  #########################################################
+"
+  filetype plugin on
+
+" source vimplugs
+  call plug#begin('~/.vim/autoload')
+      source ~/.vim/plugins.vim
+  call plug#end()
+
 " autoload
   if empty(glob('~/.vim/autoload/plug.vim'))
     silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
@@ -6,17 +14,36 @@
     autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
   endif
 
-  filetype plugin on
-  " source vimplugs
-  call plug#begin('~/.vim/autoload')
-      source ~/.vim/plugins.vim
-  call plug#end()
-
   source ~/.vim/coc-plugin.vim
+
+
+" NVIM
+map Q @@
+"set term=screen-256color
+"let g:airline_powerline_fonts = 1
+"let g:tmuxline_preset = {
+            "\ 'a': '#S',
+            "\ 'win': '#I #W',
+            "\ 'cwin': '#I #W',
+            "\ 'z': '%I:%M',
+            "\ 'options': {
+                "\'status-justify': 'left'}}
+"let g:airline#extensions#tabline#enabled = 0
+"let g:airline#extensions#whitespace#enabled = 0
+"let g:jsx_ext_required = 0
+"let g:airline_section_b = ""
+"let g:airline_section_x = ""
+"let g:airline_section_y = ""
+"let g:airline_section_z = ""
+"let g:airline_detect_whitespace=0
+"let g:airline_theme='icebergDark'
+
+
+
+"let &runtimepath = '~/.vim/bundle/rainbow,' . &runtimepath
 
 " ##################################### THEME  #########################################################
   set statusline=%{WindowNumber()}\ %f\ %h%w%m%r%=%-14.(%l,%c%V%)\ %P
-  set term=screen-256color
   set t_Co=256
   set background=dark
   colorscheme nord
@@ -79,9 +106,7 @@
 " BEFORE I FORGET
 " delete empty lines in visual
   vnoremap de :g/^\s*$/d<CR>:noh<CR>  
-
-
-
+  map Q @@
 
 " text 
   map <Space> <Leader>
@@ -470,7 +495,6 @@ highlight SignifyLineChange ctermfg=Black ctermbg=Yellow guibg=#685a22
 highlight SignifyLineDelete ctermfg=Black ctermbg=Red guibg=#682b22
 
 map <leader>l :RainbowLevelsToggle<cr>
-let &runtimepath = '~/.vim/bundle/rainbow,' . &runtimepath
 let g:rainbow_active = 1
 hi! link RainbowLevel0 Constant
 hi! link RainbowLevel1 Type
@@ -493,24 +517,6 @@ function! ExpandPhraseKey()
     echo @+
 endfunction
 
-let g:airline_powerline_fonts = 1
-let g:tmuxline_preset = {
-            \ 'a': '#S',
-            \ 'win': '#I #W',
-            \ 'cwin': '#I #W',
-            \ 'z': '%I:%M',
-            \ 'options': {
-                \'status-justify': 'left'}}
-let g:airline#extensions#tabline#enabled = 0
-let g:airline#extensions#whitespace#enabled = 0
-let g:jsx_ext_required = 0
-let g:airline_section_b = ""
-let g:airline_section_x = ""
-let g:airline_section_y = ""
-let g:airline_section_z = ""
-let g:airline_detect_whitespace=0
-let g:airline_theme='icebergDark'
-
 highlight! link rubyKeywordAsMethod Green
 highlight! link rubyInterpolation Yellow
 highlight! link rubyInterpolationDelimiter Yellow
@@ -527,5 +533,4 @@ command! FZFMru call fzf#run({
       \  'sink':    'e',
       \  'options': '-m -x +s',
       \  'down':    '40%'})
-
 
