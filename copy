@@ -26,6 +26,8 @@ function copy_create_zip() {
     cp ~/.zshrc ~/tmp-files/.zshrc
     cp ~/settings.json ~/tmp-files/settings.json
     cp ~/.brew ~/tmp-files/.brew
+    cp ~/.notion-enhancer ~/tmp-files/.notion-enhancer
+
 
     echo "cvim"
     mkdir ~/tmp-files/cvim
@@ -38,12 +40,16 @@ function copy_create_zip() {
     echo "movin directories"
     mkdir ~/tmp-files/.tmux
     cp -R ~/.tmux ~/tmp-files
+    mkdir ~/tmp-files/.config
+    mkdir ~/tmp-files/.config/nvim
+    cp -R ~/.config/nvim/init.vim ~/tmp-files/.config/nvim/init.vim
     mkdir ~/tmp-files/.vim
     cp ~/.vim/coc-settings.json ~/tmp-files/.vim/coc-settings.json
     cp ~/.vim/plugins.vim ~/tmp-files/.vim/plugins.vim
     cp ~/.vim/coc-plugin.vim ~/tmp-files/.vim/coc-plugin.vim
 
     echo "delete all other than most recent bttpreset, copy to tmp-file, then delete"
+    # to find most recent is `ls -Art  ~/Downloads/*.bttpreset | tail -n 1`
     ls -t  ~/Downloads/*.bttpreset | tail -n +2 | xargs rm -f
     find ~/Downloads -type f -name "*.bttpreset" -maxdepth 1 -exec cp "{}" ~/tmp-files/$(date +"%m-%d-%y").bttpreset \;
 }
@@ -86,6 +92,14 @@ function unzippem() {
     fi
 }
 
+# function install_brew() {
+  #  if brew ls --versions myformula > /dev/null; then
+      # The package is installed
+  #  else
+      # The package is not installed
+  #  fi
+# }
+
 function setup() {
     echo "setting up for the first time"
 
@@ -110,13 +124,15 @@ function setup() {
 
 function paste() {
     rm ~/*.bttpreset
+    # only keep most recent tmp-files*.zip
+    ls -t  ~/Downloads/tmp-files*.zip | tail -n +2 | xargs -I{} rm -v {}
 
     if [[ $2 == *"force"* ]]
         then
-        unzip -o ~/Downloads/tmp-files.zip -d ~
+        unzip -o ~/Downloads/tmp-files*.zip -d ~
     else
         # vim command: do (other into current) / dp (current into other)
-        mkdir -p ~/tmp-files & unzip -o ~/Downloads/tmp-files.zip -d ~/Downloads/tmp-files
+        mkdir -p ~/tmp-files & unzip -o ~/Downloads/tmp-files*.zip -d ~/Downloads/tmp-files
             for files in $(diff -rq ~ ~/Downloads/tmp-files|grep 'differ$'|sed "s/^Files //g;s/ differ$//g;s/ and /:/g"); do
                 vimdiff ${files%:*} ${files#*:};
             done
@@ -146,6 +162,7 @@ else
             echo "personal"
             copy_create_zip
             personal_and_clean_up
+            open https://github.com/drkdi/dotfiles/commit/main
 
     elif [ $1 = "setup" ]
         then
@@ -158,6 +175,8 @@ else
 
     elif [[ $1 == *"dotfile"* ]] 
         then
+            copy_create_zip
             save_dotfiles
+            open https://github.com/drkdi/dotfiles/commit/main
     fi
 fi

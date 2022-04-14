@@ -7,7 +7,10 @@ git
 grep
 gnu-sed
 htop
+neovim
 node
+notion
+notion-enhanced
 python@3.9
 pure
 ranger
