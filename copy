@@ -27,6 +27,7 @@ function copy_create_zip() {
     cp ~/settings.json ~/tmp-files/settings.json
     cp ~/.brew ~/tmp-files/.brew
     cp ~/.notion-enhancer ~/tmp-files/.notion-enhancer
+    cp ~/startup.ahk ~/tmp-files/startup.ahk
 
 
     echo "cvim"
@@ -147,7 +148,9 @@ function save_dotfiles() {
         cd $DIR 
         rm *.bttpreset
         unzip -o ~/Downloads/tmp-files.zip -d "$DIR"
-        gacp "update"
+        git add .
+        git commit -m "update"
+        git push
     done
 }
 
@@ -162,7 +165,6 @@ else
             echo "personal"
             copy_create_zip
             personal_and_clean_up
-            open https://github.com/drkdi/dotfiles/commit/main
 
     elif [ $1 = "setup" ]
         then
