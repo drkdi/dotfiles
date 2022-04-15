@@ -157,7 +157,7 @@ export PSQL_PAGER="less -S"
         #git ls-files -m | xargs ls -1 2>/dev/null | grep '\.rb$' | xargs rubocop -a
         #yarn lint --fix
         git add .
-        git commit -a -m "$1"
+        git commit -a -m "$1" --no-verify
         git push
     }
 

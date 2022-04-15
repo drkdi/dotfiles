@@ -55,8 +55,8 @@ Plug 'pangloss/vim-javascript'    " JavaScript support
 Plug 'leafgarland/typescript-vim' " TypeScript syntax
 Plug 'maxmellon/vim-jsx-pretty'   " JS and JSX syntax
 " theme
-"Plug 'vim-airline/vim-airline'
-"Plug 'vim-airline/vim-airline-themes'
+Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
 "Plug 'gkeep/iceberg-dark'
 "let g:airline_theme='everforest'
 
@@ -93,8 +93,8 @@ Plug 'cocopon/iceberg.vim'
 Plug 'arcticicestudio/nord-vim'
 "colorscheme 'nord'
 
-"Plug 'dracula/vim', { 'as': 'dracula' }
-"Plug 'dracula/vim', { 'name': 'dracula' }
+Plug 'dracula/vim', { 'as': 'dracula' }
+Plug 'dracula/vim', { 'name': 'dracula' }
 
 "phraseapp YML specific
 Plug 'airblade/vim-localorie'
@@ -107,3 +107,4 @@ Plug 'kshenoy/vim-signature'
 "nvim specific
 Plug 'nvim-treesitter/nvim-treesitter'
 Plug 'neovim/nvim-lspconfig'
+

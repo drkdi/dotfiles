@@ -20,7 +20,7 @@
 " NVIM
 map Q @@
 "set term=screen-256color
-"let g:airline_powerline_fonts = 1
+let g:airline_powerline_fonts = 1
 "let g:tmuxline_preset = {
             "\ 'a': '#S',
             "\ 'win': '#I #W',
@@ -28,14 +28,17 @@ map Q @@
             "\ 'z': '%I:%M',
             "\ 'options': {
                 "\'status-justify': 'left'}}
-"let g:airline#extensions#tabline#enabled = 0
-"let g:airline#extensions#whitespace#enabled = 0
-"let g:jsx_ext_required = 0
-"let g:airline_section_b = ""
-"let g:airline_section_x = ""
-"let g:airline_section_y = ""
-"let g:airline_section_z = ""
-"let g:airline_detect_whitespace=0
+let g:airline#extensions#tabline#enabled = 0
+let g:airline#extensions#whitespace#enabled = 0
+" don't show path
+let g:airline#extensions#tabline#fnamemod = ':t'
+let g:airline_section_c = '%t'
+let g:jsx_ext_required = 0
+let g:airline_section_b = ""
+let g:airline_section_x = ""
+let g:airline_section_y = ""
+let g:airline_section_z = ""
+let g:airline_detect_whitespace=0
 "let g:airline_theme='icebergDark'
 
 
@@ -43,7 +46,7 @@ map Q @@
 "let &runtimepath = '~/.vim/bundle/rainbow,' . &runtimepath
 
 " ##################################### THEME  #########################################################
-  set statusline=%{WindowNumber()}\ %f\ %h%w%m%r%=%-14.(%l,%c%V%)\ %P
+  "set statusline=%{WindowNumber()}\ %f\ %h%w%m%r%=%-14.(%l,%c%V%)\ %P
   set t_Co=256
   set background=dark
   colorscheme nord
