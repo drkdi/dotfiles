@@ -7,18 +7,15 @@ scrolling:
 
 font:
   normal:
-    #family: CozetteVector
-    #family: Menlo
-    #family: monofur for Powerline
-    family: Dank Mono
+    family: DankMono Nerd Font Mono
     style: Regular
   bold:
-    family: Menlo
+    family: DankMono Nerd Font Mono
     style: Bold
   italic:
-    family: Menlo
+    family: DankMono Nerd Font Mono
     style: Italic
-  size: 20.0
+  size: 14.0
 
 draw_bold_text_with_bright_colors: true
 

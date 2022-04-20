@@ -27,12 +27,12 @@ let g:airline_powerline_fonts = 1
             "\ 'cwin': '#I #W',
             "\ 'z': '%I:%M',
             "\ 'options': {
-                "\'status-justify': 'left'}}
+            "\'status-justify': 'left'}}
 let g:airline#extensions#tabline#enabled = 0
 let g:airline#extensions#whitespace#enabled = 0
 " don't show path
 let g:airline#extensions#tabline#fnamemod = ':t'
-let g:airline_section_c = '%t'
+let g:airline_section_c = '%t %#__accent_green#%m'
 let g:jsx_ext_required = 0
 let g:airline_section_b = ""
 let g:airline_section_x = ""
@@ -313,7 +313,8 @@ let g:airline_detect_whitespace=0
   cnoreabbrev rg Rg
   cnoreabbrev files GFiles
   cnoreabbrev f GFiles
-  nnoremap <silent>ff :Rg <c-r>=expand("")<cr>
+  "nnoremap <silent>ff :Rg <c-r>=expand("")<cr>
+  nnoremap ff :Rg<cr>
   nnoremap <silent>FF :Files<cr>
   "map <leader>F :Files <c-r>=expand("")<cr>
   map <leader>f :rg <c-r>=expand("<cword>")<cr><cr>
@@ -536,4 +537,3 @@ command! FZFMru call fzf#run({
       \  'sink':    'e',
       \  'options': '-m -x +s',
       \  'down':    '40%'})
-

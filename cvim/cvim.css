@@ -2,33 +2,28 @@
 .cVim-completion-item, .cVim-completion-item .cVim-full, .cVim-completion-item .cVim-left, .cVim-link-hint, .cVim-hud,
 .cVim-completion-item .cVim-right {
   font-family: arial !important;
-  font-size: 10pt !important;
-  font-weight: 900 !important;
+  font-size: 8pt !important;
+  font-weight: 700 !important;
   -webkit-font-smoothing: antialiased !important;
   background-color: #3b3228 !important;
   color: #d0c8c6;
 }
 #cVim-command-bar-input {
-  font-wight: bold !important;
-  background-color: #3b3228 !important;
-  color: #d0c8c6 !important;
+  font-weight: bold !important;
 }
 #cVim-command-bar-mode {
   box-sizing: none;
   padding-left: 0px;
-  background-color: #3b3228 !important;
-  color: #d0c8c6 !important;
 }
 
 
-
-
+<!-- These are all the defaults, untouched -->
 
 #cVim-command-bar, #cVim-command-bar-mode, #cVim-command-bar-input, #cVim-command-bar-search-results,
 .cVim-completion-item, .cVim-completion-item .cVim-full, .cVim-completion-item .cVim-left,
 .cVim-completion-item .cVim-right {
   font-family: Helvetica, Helvetica Neue, Neue, sans-serif, monospace, Arial;
-  font-size: 10pt !important;
+  font-size: 8pt !important;
   -webkit-font-smoothing: antialiased !important;
 }
 
@@ -120,7 +115,7 @@
 #cVim-link-container, .cVim-link-hint,
 #cVim-hud, #cVim-status-bar {
   font-family: Helvetica, Helvetica Neue, Neue, sans-serif, monospace, Arial;
-  font-size: 10pt !important;
+  font-size: 12pt !important;
   -webkit-font-smoothing: antialiased !important;
 }
 
@@ -166,7 +161,7 @@
   padding-left: 4px;
   padding-right: 4px;
   color: #8f8f8f;
-  font-size: 10pt;
+  font-size: 12pt;
 }
 
 #cVim-frames-outline {
