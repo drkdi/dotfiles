@@ -3,12 +3,29 @@
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 
-!r::Reload
 
+!r:: ;press control+r to reload
+    MsgBox AHK reloaded
+    Reload
+    return
+
+!h:: ;help
+    Msgbox, 
+    (LTrim
+        1 chrome
+        2 startup / vscode
+        3 notion
+        4 stuff
+        5 close stuff
+        6 spotify
+    )
+    return
+ 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; replicate logitech mx master commands
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 CoordMode, Mouse, Screen
+
 MouseMoveStartDistanceX := 300
 MouseMoveStartDistanceY := 25
 KeyIsPressed := 0
@@ -20,32 +37,32 @@ F10::
     {
         MouseGetPos, MouseCurrentPositionX, MouseCurrentPositionY
         MouseMoveCurrentDistanceX := MouseStartPositionX - MouseCurrentPositionX
-        if ( (MouseMoveCurrentDistanceX) < (-1 * MouseMoveStartDistanceX) )
-        {
-            Send ^{Media_Next}
-            MouseStartPositionX := MouseCurrentPositionX
-            count += 100
-        }
-        if ( (MouseMoveCurrentDistanceX) > (MouseMoveStartDistanceX) )
-        {
-            Send ^{Media_Prev}
-            MouseStartPositionX := MouseCurrentPositionX
-            count += 100
-        }
-	MouseMoveCurrentDistanceY := MouseStartPositionY - MouseCurrentPositionY
-        YDelta := Sqrt(Abs(MouseMoveCurrentDistanceY / 20))
-        if ( (MouseMoveCurrentDistanceY) < (-1 * MouseMoveStartDistanceY) )
-        {
-            Send ^{Volume_Down %YDelta%}
-            MouseStartPositionY := MouseCurrentPositionY
-            count++
-        }
-        if ( (MouseMoveCurrentDistanceY) > (MouseMoveStartDistanceY) )
-        {
-            Send ^{Volume_Up %YDelta%}
-            MouseStartPositionY := MouseCurrentPositionY
-            count++
-        }
+            if ( (MouseMoveCurrentDistanceX) < (-1 * MouseMoveStartDistanceX) )
+            {
+                Send ^{Media_Next}
+                MouseStartPositionX := MouseCurrentPositionX
+                count += 100
+            }
+            if ( (MouseMoveCurrentDistanceX) > (MouseMoveStartDistanceX) )
+            {
+                Send ^{Media_Prev}
+                MouseStartPositionX := MouseCurrentPositionX
+                count += 100
+            }
+        MouseMoveCurrentDistanceY := MouseStartPositionY - MouseCurrentPositionY
+            YDelta := Sqrt(Abs(MouseMoveCurrentDistanceY / 20))
+            if ( (MouseMoveCurrentDistanceY) < (-1 * MouseMoveStartDistanceY) )
+            {
+                Send ^{Volume_Down %YDelta%}
+                MouseStartPositionY := MouseCurrentPositionY
+                count++
+            }
+            if ( (MouseMoveCurrentDistanceY) > (MouseMoveStartDistanceY) )
+            {
+                Send ^{Volume_Up %YDelta%}
+                MouseStartPositionY := MouseCurrentPositionY
+                count++
+            }
     }
     return
 
@@ -55,7 +72,7 @@ F10 UP::
         Send ^{Media_Play_Pause}
     }
     count := 0
-return
+    return
 
 
 
@@ -272,8 +289,7 @@ ActivateAndCycle(exe)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; aforementioned apps
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-                    ^1::
+                   ^1::
                     if WinExist("ahk_exe chrome.exe")
                         {
                             if WinActive("ahk_exe chrome.exe")
@@ -319,9 +335,12 @@ ActivateAndCycle(exe)
                         else
                             Run C:\Users\d\AppData\Local\Programs\Microsoft VS Code\Code.exe
                         return
-                        
-                    ; well, one of these works
-                    ^5::
+
+                    ^3::
+                        ActivateOrLaunch("Notion",  "C:\Users\d\AppData\Local\Programs\Notion\Notion.exe")
+                        RETURN
+
+                    ^4::
                     Run, C:\Program Files (x86)\VPNetwork LLC\TorGuard\TorGuardDesktopQt.exe
                     if WinExist("ahk_exe Firefox.exe")
                         {
@@ -341,6 +360,26 @@ ActivateAndCycle(exe)
                             Run, firefox.exe -private
                         return
 
+                    ^5::
+                    CloseWindows("FireFox")
+                    CloseWindows("TorGuard")
+                    CloseWindows("League")
+                    CloseWindows("Riot")
+
+                    CloseWindows(P_Name := "FAKEDEFAULTNAMEGOESHERE")
+                    {   for process in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Process where Name like '%" P_Name "%'")
+                            if (!process)
+                            {
+                                return
+                            }
+                            process.terminate()
+                            Process, Close, % process.Name
+                            Run, taskkill, % process.Name
+                            WinClose % process.Name
+                            return
+                    }
+                    return
+
                     ^6::
                     WinActivate, spotify.exe
                     WinActivate, Spotify
@@ -358,3 +397,39 @@ ActivateAndCycle(exe)
 #s::
  DllCall("PowrProf\SetSuspendState", "int", 0, "int", 0, "int", 0)
  return
+
+
+
+
+
+ ; ---------- Google Translate ---------- ;
+; Google Translate copied text into selected language
+
+languageList := ["af","sq","am","ar","hy","az","be","bn","bs","bg","zh-cn","hr","cs","da","nl","et","tl","fi","fr","gl","de","el","haw","iw","hi","hu","is","id","ga","it","ja","km","ko","ku","la","lv","lt","mt","mi","ne","no","fa","pl","pt","pa","ro","ru","sm","gd","sr","sd","sk","sl","so","es","su","sw","sv","ta","te","th","tr","uk","ur","vi","cy","yi","zu"]
+
+Gui, +AlwaysOnTop +ToolWindow -SysMenu
+Gui, GT:Add, ListBox, r60 gAction vChoice altsubmit w200 h60, Afrikaans|Albanian|Amharic|Arabic|Armenian|Azerbaijani|Belarusian|Bengali|Bosnian|Bulgarian|Chinese|Croatian|Czech|Danish|Dutch|Estonian|Filipino|Finnish|French|Galician|German|Greek|Hawaiian|Hebrew|Hindi|Hungarian|Icelandic|Indonesian|Irish|Italian|Japanese|Khmer|Korean|Kurdish|Latin|Latvian|Lithuanian|Maltese|Maori|Nepali|Norwegian|Persian|Polish|Portugese|Punjabi|Romanian|Russian|Samoan|Scots Gaelic|Serbian|Sindhi|Slovak|Slovenian|Somali|Spanish|Sudanese|Swahili|Swedish|Tamil|Telugu|Thai|Turkish|Ukranian|Urdu|Vietnamese|Welsh|Yiddish|Zulu
+Gui, GT:Show, x0 y0, Languages
+Return
+
+Action:
+If ((A_GuiEvent = "DoubleClick") || (Trigger_Action))
+{
+    global languageList
+    Gui, GT:Submit
+    run % "https://translate.google.com/#en/" languageList[Choice] "/" clipboard
+	Gui, GT:Destroy
+}
+Return
+
+#If WinActive("Languages ahk_class AutoHotkeyGUI")
+Enter::
+    Trigger_Action := true
+    GoSub, Action
+    Trigger_Action := false
+return
+#If
+
+GuiClose:
+    ExitApp
+return

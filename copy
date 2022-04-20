@@ -49,7 +49,7 @@ function copy_create_zip() {
     cp ~/.vim/plugins.vim ~/tmp-files/.vim/plugins.vim
     cp ~/.vim/coc-plugin.vim ~/tmp-files/.vim/coc-plugin.vim
 
-    echo "delete all other than most recent bttpreset, copy to tmp-file, then delete"
+    echo "delete all other than most recent bttpreset in /Downloads, copy to tmp-file, then delete"
     # to find most recent is `ls -Art  ~/Downloads/*.bttpreset | tail -n 1`
     ls -t  ~/Downloads/*.bttpreset | tail -n +2 | xargs rm -f
     find ~/Downloads -type f -name "*.bttpreset" -maxdepth 1 -exec cp "{}" ~/tmp-files/$(date +"%m-%d-%y").bttpreset \;
@@ -68,8 +68,8 @@ function clean_up() {
 function personal_and_clean_up() {
     echo "don't put to git"
     cp ~/Derek.bettertouchtool ~/tmp-files/Derek.bettertouchtool
-    cp ~/DankMono-Regular.otf ~/tmp-files/DankMono-Regular.otf
-    cp ~/DankMono-Italic.otf ~/tmp-files/DankMono-Italic.otf
+    cp ~/DankMono-Italic-Nerd-Font-Mono.otf ~/tmp-files/DankMono-Italic-Nerd-Font-Mono.otf
+    cp ~/DankMono-Regular-Nerd-Font-Mono.otf ~/tmp-files/DankMono-Regular-Nerd-Font-Mono.otf
     mkdir -p ~/tmp-files/.config/tmuxinator
     cp -R ~/.config/tmuxinator ~/tmp-files/.config
 
@@ -134,7 +134,11 @@ function paste() {
     else
         # vim command: do (other into current) / dp (current into other)
         mkdir -p ~/tmp-files & unzip -o ~/Downloads/tmp-files*.zip -d ~/Downloads/tmp-files
-            for files in $(diff -rq ~ ~/Downloads/tmp-files|grep 'differ$'|sed "s/^Files //g;s/ differ$//g;s/ and /:/g"); do
+            for files in $(diff -rq ~ ~/Downloads/tmp-files | grep 'differ$' | sed "s/^Files //g;s/ differ$//g;s/ and /:/g"); do
+                if [[ "${files%.*}" == *"DS"* || "${files%.*}" == *"cvim"* ]]
+                  then continue
+                fi
+
                 vimdiff ${files%:*} ${files#*:};
             done
     fi

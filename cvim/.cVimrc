@@ -26,7 +26,8 @@ let qmark c = ["chrome://extensions/shortcuts"]
 let qmark w = ["https://www.netflix.com/", "https://www.hulu.com/", "https://play.hbomax.com/", "https://www.disneyplus.com/"]
 let qmark p = ["https://passwords.google.com/?hl=en-US"]
 
-let blacklists = ["https://www.amazon.com/*", "https://remotedesktop.google.com/*"]
+""https://www.amazon.com/*"
+let blacklists = ["*https://remotedesktop.google.com/*"]
 
 
 map a :tabnew<space>
@@ -59,6 +60,7 @@ map Z :tabattach (autocQAomplete)
 
 map 0 firstTab
 map $ lastTab
+map . repeatCommand
 map , :settings<CR>
 map = zoomPageIn
 map - zoomPageOut
@@ -86,46 +88,43 @@ imap <C-f> forwardWord
 "map L goForward
 "map gs openLastLinkInTab
 "map gd :duplicate
-"map R :call nextPage<CR>
-"map E :call prevPage<CR>
 "map E previousMatchPattern
 "map R nextMatchPattern
 "change c to manual, C for hint, paste?
 
 nextPage -> {{
   (function() {
-    var replaceURLNumber = function(callback) {
-      var url = document.URL.replace(/\b(\d+)(?!.*\d)\b/, callback);
-      if (url !== document.URL)
-        RUNTIME('openLink', { url: url, tab: { tabbed: false } });
-    };
-    Mappings.actions.incrementURLPath = function(repeats) {
-      replaceURLNumber(function(e) { return +e + repeats; });
-    };
-    Hints.matchPatterns(settings.previousmatchpattern) || Mappings.actions.decrementURLPath(1)
-})();
-
-pattern = new RegExp('^' + settings.nextmatchpattern + '$', 'i');
-  link = findFirstOf(getLinkableElements(), function(e) {
-        return e.textContent.trim() &&
-          (pattern.test(e.textContent) || pattern.test(e.getAttribute('value')));
-      })
-  link ? Hints.matchPatterns(settings.nextmatchpattern) : Mappings.actions.incrementURLPath(1)
+      var replaceURLNumber = function(callback) {
+        var url = document.URL.replace(/\b(\d+)(?!.*\d)\b/, callback);
+        if (url !== document.URL)
+          RUNTIME('openLink', { url: url, tab: { tabbed: false } });
+       };
+       Mappings.actions.incrementURLPath = function(repeats) {
+          replaceURLNumber(function(e) { return +e + repeats; });
+       };
+   } 
+   )();
+   Hints.matchPatterns(settings.nextmatchpattern) || Mappings.actions.incrementURLPath(1)
 }}
+
 
 prevPage -> {{
   (function() {
-    var replaceURLNumber = function(callback) {
-      var url = document.URL.replace(/\b(\d+)(?!.*\d)\b/, callback);
-      if (url !== document.URL)
-        RUNTIME('openLink', { url: url, tab: { tabbed: false } });
-    };
-    Mappings.actions.decrementURLPath = function(repeats) {
-      replaceURLNumber(function(e) { return Math.max(0, +e - repeats); });
-    };
-})();
+      var replaceURLNumber = function(callback) {
+        var url = document.URL.replace(/\b(\d+)(?!.*\d)\b/, callback);
+        if (url !== document.URL)
+          RUNTIME('openLink', { url: url, tab: { tabbed: false } });
+        };
+        Mappings.actions.decrementURLPath = function(repeats) {
+         replaceURLNumber(function(e) { return Math.max(0, +e - repeats); });
+        }; 
+     }
+    )();
+    Hints.matchPatterns(settings.previousmatchpattern) || Mappings.actions.decrementURLPath(1)
 }}
 
+
+""""""""""""" ( ͡° ͜ʖ ͡°)
 hintIncognito(link) -> {{
  RUNTIME('openLinkWindow', {
       url: link.href,
@@ -133,3 +132,13 @@ hintIncognito(link) -> {{
     });
 }}
 
+
+
+"""""""""""""no idea
+"pattern = new RegExp('^' + settings.nextmatchpattern + '$', 'i');
+"  link = findFirstOf(getLinkableElements(), function(e) {
+"        return e.textContent.trim() &&
+"          (pattern.test(e.textContent) || pattern.test(e.getAttribute('value')));
+"      })
+"  link ? Hints.matchPatterns(settings.nextmatchpattern) : Mappings.actions.incrementURLPath(1)
+" }}
