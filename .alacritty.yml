@@ -15,7 +15,7 @@ font:
   italic:
     family: DankMono Nerd Font Mono
     style: Italic
-  size: 14.0
+  size: 12.5
 
 draw_bold_text_with_bright_colors: true
 
@@ -130,4 +130,5 @@ key_bindings:
     - { key: J,     mods: Command,       chars: "\x0a" }
     - { key: K,     mods: Command,       chars: "\x0b" }
     - { key: D,     mods: Command,       chars: "\x04" }
+    - { key: C,     mods: Command,       chars: "\x02\x63" }
     - { key: Space,  mods: Shift,  action: ToggleViMode }
