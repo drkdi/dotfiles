@@ -96,22 +96,36 @@ export PSQL_PAGER="less -S"
     }
 
 ##################################### STUFF #########################################################
+    function replaceEqual() {
+        sed -i '' "s/$1 = .*/$1 = \"$2\"/g" ~/.vim/autoload/nord-vim/colors/nord.vim
+    }
+
+    function replaceColon() {
+      sed -i '' "s/$1: .*/$1: $2 /g" ~/.alacritty.yml
+    }
     function personal() {
 #   hardcoded version
 #   sed -i '' 's/nord0_gui = .*/nord0_gui = "#1b1e24"/g' ~/.vim/autoload/nord-vim/colors/nord.vim
 #   -i in place, '' s/ substitute, $1 $2 parameters, \" escapes
-        function replaceEqual() {
-            sed -i '' "s/$1 = .*/$1 = \"$2\"/g" ~/.vim/autoload/nord-vim/colors/nord.vim
-        }
-
-        function replaceColon() {
-            sed -i '' "s/$1: .*/$1: $2/g" ~/.alacritty.yml
-        }
-        
         source ~/.zshrc
         replaceEqual "nord0_gui" "#1e232b"
-        replaceColon "size" "14.0"
+        replaceColon "size" "17.8"
         echo "updated personal"
+    }
+
+
+    function fontSize() {
+      num=$(grep "size: " ~/.alacritty.yml | sed -e 's/.*://')
+      if [[ "$1" == *"a"* ]]; then
+        increment=0.05
+        num=`echo $num + $increment | bc`
+        replaceColon "size" $num
+      elif [[ "$1" ]]; then
+        increment=-0.05
+        num=`echo $num + $increment | bc`
+        replaceColon "size" $num
+      fi
+      echo $num
     }
 
     function qq() { 
