@@ -6,7 +6,11 @@
 # CREATE ..3, repeat .. 3 times
 # automatically create alias, takes input and current directory, append to TC
 
-#plugins=(git)
+plugins=(
+  zsh-autosuggestions
+)
+
+source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 export ZSH="/Users/.oh-my-zsh.sh"
 ZSH_THEME=""
