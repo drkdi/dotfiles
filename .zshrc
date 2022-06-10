@@ -10,7 +10,7 @@ plugins=(
   zsh-autosuggestions
 )
 
-source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
+#source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 export ZSH="/Users/.oh-my-zsh.sh"
 ZSH_THEME=""
@@ -107,6 +107,15 @@ export PSQL_PAGER="less -S"
     function replaceColon() {
       sed -i '' "s/$1: .*/$1: $2 /g" ~/.alacritty.yml
     }
+
+    function desk() {
+        source ~/.zshrc
+        replaceEqual "nord0_gui" "#1e232b"
+        replaceColon "size" "20"
+        echo "desk"
+    }
+
+
     function personal() {
 #   hardcoded version
 #   sed -i '' 's/nord0_gui = .*/nord0_gui = "#1b1e24"/g' ~/.vim/autoload/nord-vim/colors/nord.vim
@@ -114,7 +123,7 @@ export PSQL_PAGER="less -S"
         source ~/.zshrc
         replaceEqual "nord0_gui" "#1e232b"
         replaceColon "size" "17.8"
-        echo "updated personal"
+        echo "personal"
     }
 
 
@@ -145,6 +154,25 @@ export PSQL_PAGER="less -S"
     function regex() {
       gawk 'match($0,/'$1'/, ary) {print ary['${2:-'0'}']}'
     }
+
+    function close() {
+      APPS=$(osascript -e 'tell application "System Events" to get name of (processes where background only is false)')
+      IFS=',' read -r -A myAppsArray <<< "$APPS"
+      for myApp in "${myAppsArray[@]}"
+      do
+        #close all node servers, suspend + close chrome tabs
+        # Remove space character from the start of the Array item
+        appName=$(echo "$myApp" | sed 's/^ *//g')
+        if [[ ! "$appName" == "Google Chrome" &&
+          ! "$appName" == "alacritty" 
+            ]]; then
+          osascript -e 'quit app "'"$appName"'"'
+          echo $appName
+        fi
+      done
+    }
+
+
 
 
 
@@ -195,8 +223,6 @@ export PSQL_PAGER="less -S"
       fi
       git config --get remote.origin.url | regex "\/(.*)\.git" 1
     }
-
-
 
 
 ##################################### FZF #########################################################

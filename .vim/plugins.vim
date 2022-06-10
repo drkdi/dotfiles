@@ -28,6 +28,7 @@ Plug 'terryma/vim-multiple-cursors'
 " easily add/remove parents
 " ysiw" normal, S visual
 Plug 'tpope/vim-surround'
+Plug 'machakann/vim-sandwich'
 " extend repeat commands
 Plug 'tpope/vim-repeat'
 " autoindent stuff, visual-mode, ga + <align-by>
@@ -61,6 +62,9 @@ Plug 'vim-airline/vim-airline-themes'
 "let g:airline_theme='everforest'
 
 Plug 'cocopon/iceberg.vim'
+
+Plug 'lukas-reineke/indent-blankline.nvim'
+
 "Plug 'thiagoalessio/rainbow_levels.vim'
 "Plug 'luochen1990/rainbow'
 
@@ -107,4 +111,7 @@ Plug 'kshenoy/vim-signature'
 "nvim specific
 Plug 'nvim-treesitter/nvim-treesitter'
 Plug 'neovim/nvim-lspconfig'
+
+
+Plug 'catppuccin/vim', { 'as': 'catppuccin' }
 

@@ -23,7 +23,7 @@ let qmark e = ["https://gist.github.com/drkdi/4e03d5828cce47d42d54f9c5507479d1/e
 let qmark t = ["https://slickdeals.net/", "https://www.reddit.com/", "https://www.youtube.com/"]
 let qmark v = ["https://gist.github.com/drkdi/4e03d5828cce47d42d54f9c5507479d1/edit", "https://github.com/1995eaton/chromium-vim", "chrome-extension://ihlenndgcmojhcghmfjfneahoeklbjjh/pages/options.html"]
 let qmark c = ["chrome://extensions/shortcuts"]
-let qmark w = ["https://www.netflix.com/", "https://www.hulu.com/", "https://play.hbomax.com/", "https://www.disneyplus.com/"]
+let qmark w = ["https://www.netflix.com/", "https://www.hulu.com/", "https://play.hbomax.com/", "https://www.disneyplus.com/", "https://www.amazon.com/Amazon-Video/b?ie=UTF8&node=2858778011"]
 let qmark p = ["https://passwords.google.com/?hl=en-US"]
 
 ""https://www.amazon.com/*"
