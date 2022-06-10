@@ -49,7 +49,13 @@ let g:airline_detect_whitespace=0
   "set statusline=%{WindowNumber()}\ %f\ %h%w%m%r%=%-14.(%l,%c%V%)\ %P
   set t_Co=256
   set background=dark
-  colorscheme nord
+  "colorscheme nord
+"colorscheme catppuccin_frappe
+"colorscheme catppuccin_latte
+"colorscheme catppuccin_macchiato
+colorscheme catppuccin_mocha
+
+
   au ColorScheme * hi Normal ctermbg=None
   if exists('+termguicolors')
     let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
@@ -81,8 +87,8 @@ let g:airline_detect_whitespace=0
   set smartindent                          "  new line inherits indent
   set expandtab                            "  tabs to spaces
   set tabstop=4
-  set softtabstop=2
-  set shiftwidth=2
+  "set softtabstop=2
+  set shiftwidth=4
   set wildignore+=*/tmp/*,*.so,*.swp,*.zip "  ignore these types of files
   set history=1000                         "  increase undo limit
   set nowrap                               "  disable auto wrap
@@ -97,7 +103,7 @@ let g:airline_detect_whitespace=0
   set scrolloff=10                         "  lines of buffer between top and bottom
   set ttimeout
   set ttimeoutlen=0
-  set timeoutlen=600                       "  time in between commands v,c
+  set timeoutlen=500                       "  time in between commands v,c,y
   syntax enable                            "  colors, overrule with on
   set number relativenumber
   set numberwidth=2
@@ -124,6 +130,13 @@ let g:airline_detect_whitespace=0
   nnoremap L }
   nnoremap qq :close<cr>
   map <leader>r viw"0p
+
+  "function! Replace(arg1,...)
+    "let arg = get(a:, 1, 0)
+    "echom arg
+    "execute "viw" arg . "p"
+  "endfunction
+
   set pastetoggle=<F2>
   noremap U <C-r><CR>
 
@@ -139,6 +152,13 @@ let g:airline_detect_whitespace=0
   noremap C "_C
   nnoremap X yydd
 
+
+ "yank in /
+  onoremap <silent> i/ :<C-U>normal! T/vt/<CR>
+  onoremap <silent> a/ :<C-U>normal! F/vf/<CR>
+  xnoremap <silent> i/ :<C-U>normal! T/vt/<CR>
+  xnoremap <silent> a/ :<C-U>normal! F/vf/<CR>
+
   vnoremap d "_d
   vnoremap dd "_dd
   vnoremap D "_D
@@ -149,9 +169,10 @@ let g:airline_detect_whitespace=0
 " windows
   nmap <Leader>w :w<CR>
   nmap <Leader>q :q<CR>
+  nmap <Leader>e :wq<CR>
   cnoreabbrev b :Buffers
   nmap <Leader>b :Buffers<CR>
-  nmap <Leader>Q :History<CR>
+  nmap <Leader>Q :qa!<CR>
   cnoreabbrev QQ :browse oldfiles 
   cnoreabbrev Q :History
   cnoreabbrev .. cd ..
@@ -179,8 +200,8 @@ let g:airline_detect_whitespace=0
   "imap bpp <%= binding.pry %>
 
 " source / edit
-  cnoreabbrev sv :source $MYVIMRC<CR>         
-  cnoreabbrev ve :vsplit $MYVIMRC<CR>         
+  cnoreabbrev sv :source ~/.vimrc <CR>         
+  cnoreabbrev ve :vsplit ~/.vimrc <CR>         
   cnoreabbrev ze :vsplit ~/.zshrc<CR>         
   cnoreabbrev te :vsplit ~/.tc_settings<CR>   
   cnoreabbrev N :e ~/notes.md<CR>Go<CR>  
@@ -259,10 +280,15 @@ let g:airline_detect_whitespace=0
   nnoremap <silent> <Leader>< 30<C-w><
   nnoremap <silent> <Leader>= <C-w>=
 
+  "split same buffer
+  nnoremap <Leader>ls :leftabove  vsplit<CR>
+  nnoremap <Leader>ks :rightbelow split<CR>
+
   nnoremap <Leader>hn :leftabove  vnew<CR>
   nnoremap <Leader>ln :rightbelow vnew<CR>
   nnoremap <Leader>kn :leftabove  new<CR>
   nnoremap <Leader>jn :rightbelow new<CR>
+
 
   nnoremap <Leader>hb :leftabove  vnew<CR>:Buffers<CR>
   nnoremap <Leader>lb :rightbelow vnew<CR>:Buffers<CR>
@@ -294,7 +320,8 @@ let g:airline_detect_whitespace=0
   let g:netrw_preview        = 1
   let g:netrw_liststyle      = 3      " tree structure
   let g:netrw_banner         = 0         " remove banner
-  let g:netrw_browse_split   = 2   " default open vertical split
+  let g:netrw_browse_split   = 0
+  "let g:netrw_browse_split   = 2   " default open vertical split
   let g:netrw_winsize        = 25       " explorer width
   let g:netrw_keepdir        = 1        " make netrw not change directory
   let g:ag_working_path_mode = "r" " ag stuff

@@ -39,8 +39,8 @@ function copy_create_zip() {
     cp ~/copy ~/tmp-files/copy
 
     echo "movin directories"
-    mkdir ~/tmp-files/.tmux
-    cp -R ~/.tmux ~/tmp-files
+    #mkdir ~/tmp-files/.tmux
+    #cp -R ~/.tmux ~/tmp-files
     mkdir ~/tmp-files/.config
     mkdir ~/tmp-files/.config/nvim
     cp -R ~/.config/nvim/init.vim ~/tmp-files/.config/nvim/init.vim
