@@ -1,0 +1,24 @@
+{
+  "keyMappings": "map a Vomnibar.activateTabSelection\nmap A Vomnibar.activateInNewTab\nmap c toggleMuteTab\nmap d scrollPageDown\nmap D goForward\nmap e nextTab\nmap E goPrevious\nmap F LinkHints.activateModeToOpenInNewForegroundTab\nmap h showHelp\nmap R goNext\nmap s scrollPageUp\nmap S goBack\nmap r reload\nmap q focusInput\nmap Q LinkHints.activateModeToOpenIncognito\nmap w previousTab\nmap x removeTab\nmap X restoreTab\nmap z visitPreviousTab\nmap 0 firstTab\nmap $ lastTab\n\nunmap m\nmap mf LinkHints.activateModeWithQueue\nmap v LinkHints.activateModeWithQueue\nmap < moveTabLeft\nmap > moveTabRight\n# map arrow goNext",
+  "linkHintCharacters": "qwertasdfgzxcvb",
+  "searchEngines": "a: http://google.com/?q=%s\n\n# More examples.\n#\n# (Vimium supports search completion Wikipedia, as\n# above, and for these.)\n#\n# g: https://www.google.com/search?q=%s Google\n# l: https://www.google.com/search?q=%s&btnI I'm feeling lucky...\n# y: https://www.youtube.com/results?search_query=%s Youtube\n# gm: https://www.google.com/maps?q=%s Google maps\n# b: https://www.bing.com/search?q=%s Bing\n# d: https://duckduckgo.com/?q=%s DuckDuckGo\n# az: https://www.amazon.com/s/?field-keywords=%s Amazon\n# qw: https://www.qwant.com/?q=%s Qwant",
+  "settingsVersion": "2.3.1",
+  "exclusionRules": [
+    {
+      "passKeys": "",
+      "pattern": "https?://neetcode.io/*"
+    },
+    {
+      "passKeys": "",
+      "pattern": "https?://app.coderpad.io/*"
+    },
+    {
+      "passKeys": "",
+      "pattern": "https?://app.codesignal.com/*"
+    },
+    {
+      "passKeys": "",
+      "pattern": "https?://leetcode.com/*"
+    }
+  ]
+}

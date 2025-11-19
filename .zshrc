@@ -1,6 +1,6 @@
 #!/bin/zsh
 #symlink
-
+zmodload zsh/zprof
 
 #todo:
 # CREATE ..3, repeat .. 3 times
@@ -9,6 +9,7 @@
 plugins=(
   zsh-autosuggestions
 )
+
 
 #source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
 
@@ -56,6 +57,8 @@ export PSQL_PAGER="less -S"
     alias gpom='git pull origin master'
     alias go="nvim $(git status --porcelain | awk '{print $2}')"
 
+    alias dc='docker-compose'
+
 #   vim
     alias mux='tmuxinator'
     alias tmux='TERM=screen-256color tmux'
@@ -73,14 +76,15 @@ export PSQL_PAGER="less -S"
 
 #   etc
     alias ..='cd ..'
+    alias ...='cd ../..'
     alias q='fc -e : -1'
     alias stats="watch -n1 istats --no-graphs"
     alias c=code
     alias r='ranger'
-    alias s='spt'
-    alias n='spt playback -n'
-    alias p='spt playback -p'
-    alias pp='spt playback -t'
+    #alias s='spt'
+    #alias n='spt playback -n'
+    #alias p='spt playback -p'
+    #alias pp='spt playback -t'
     alias file='fzf | pbcopy'
     alias sz='source $HOME/.zshrc ; echo "sourced .zshrc"'
     alias ctags="`brew --prefix`/bin/ctags"
@@ -90,6 +94,11 @@ export PSQL_PAGER="less -S"
 #   alias n='vim "+normal Go" $HOME/notes.md'
 #   alias n='vim "+normal G$" +startinsert $HOME/notes.md'
     alias rag='vim `rg "what" | fzf`'
+
+    alias venv="source ~/bin/activate"
+
+    alias killDocker="docker stop $(docker ps -aq)"
+    alias removeDocker="docker rm $(docker ps -aq)"
 
 #   copy
     alias dotfiles='. ./copy dotfiles'
@@ -129,6 +138,7 @@ export PSQL_PAGER="less -S"
 
     function fontSize() {
       num=$(grep "size: " ~/.alacritty.yml | sed -e 's/.*://')
+
       if [[ "$1" == *"a"* ]]; then
         increment=0.05
         num=`echo $num + $increment | bc`
@@ -141,7 +151,7 @@ export PSQL_PAGER="less -S"
       echo $num
     }
 
-    function qq() { 
+    function qq() {
       #print -z $( ([ -n "$ZSH_NAME" ] && fc -li 1 || history) | fzf +s --tac --height "50%" | sed -E 's/ *[0-9]*\*? *//' | sed -E 's/\\/\\\\/g')
       print -z $( ([ -n "$ZSH_NAME" ] && fc -l 1 || history) | fzf +s --tac --height "50%" | sed -E 's/ *[0-9]*\*? *//' | sed -E 's/\\/\\\\/g')
     }
@@ -158,22 +168,21 @@ export PSQL_PAGER="less -S"
     function close() {
       APPS=$(osascript -e 'tell application "System Events" to get name of (processes where background only is false)')
       IFS=',' read -r -A myAppsArray <<< "$APPS"
+
       for myApp in "${myAppsArray[@]}"
       do
         #close all node servers, suspend + close chrome tabs
         # Remove space character from the start of the Array item
         appName=$(echo "$myApp" | sed 's/^ *//g')
+
         if [[ ! "$appName" == "Google Chrome" &&
-          ! "$appName" == "alacritty" 
+          ! "$appName" == "alacritty"
             ]]; then
           osascript -e 'quit app "'"$appName"'"'
           echo $appName
         fi
       done
     }
-
-
-
 
 
 ##################################### GIT #########################################################
@@ -190,7 +199,7 @@ export PSQL_PAGER="less -S"
       if [[ "$1" ]]; then
         git checkout -- "$1"
       else
-        git reset --hard 
+        git reset --hard
       fi
     }
 
@@ -234,10 +243,10 @@ export PSQL_PAGER="less -S"
       export FZF_DEFAULT_OPTS='--height 96% --reverse --preview "cat {}"'
     fi
 
-    
+
 
 ##################################### 墓 ぼ 地 ち  #########################################################
-# status line 
+# status line
 #   reset_color="\033[0m"
 #   git_clean_color="\033[0;32m"
 #   git_dirty_color="\033[0;31m"
@@ -280,6 +289,7 @@ export PSQL_PAGER="less -S"
 
 
 ##################################### SOURCING  #########################################################
+
 if [[ -f ~/.tc_settings ]]; then
   source ~/.tc_settings
   alias st='source $HOME/.tc_settings; echo "sourced tc_settings"'
@@ -288,6 +298,11 @@ fi
 if [[ -f ~/.med_set ]]; then
   source ~/.med_set
   alias sm='source $HOME/.med_set; echo "sourced med_set"'
+fi
+
+if [[ -f ~/.jw_set ]]; then
+  source ~/.jw_set
+  alias sm='source $HOME/.jw_set; echo "sourced jw_set"'
 fi
 
 if [[ -f ~/.personal ]]; then
@@ -299,3 +314,71 @@ fi
 bindkey "^[[1;3C" forward-word
 bindkey "^[[1;3D" backward-word
 
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#ff00ff,bg=cyan,bold,underline"
+
+# ripgrep to open first file with name | o something,
+# oo find directory
+# cmd shift x, continue pressing ctrl space x
+# source shell files in root directory if they exist
+
+# only do this one to load completion stuff
+#autoload -U compinit && compinit
+#alias startup='vim --startuptime vim.log'
+#zprof
+#
+# htop auto kill docker containeres
+
+# fix jetlagged stuff
+# use circadian rythmns to see when you should sleep during / after flight
+# inputs: flight info? (start / end date) (start / end timezones)
+#    take into account start / arrival time
+#
+#
+#
+export NVM_DIR="$HOME/.nvm"
+  [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
+  [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
+
+
+function trackpad() {
+  id=`blueutil --paired | grep "Trackpad" | grep -Eo '[a-z0-9]{2}(-[a-z0-9]{2}){5}'`
+  name=`blueutil --paired | grep "Trackpad" | grep -Eo 'name: "\S+"'`
+  echo "unpairing with BT device $id, $name"
+  blueutil --unpair "$id"
+  echo "unpaired, waiting a few seconds for trackpad to go to pairable state"
+  sleep 3
+  echo "pairing with BT device $id, $name"
+  #blueutil --pair "$id" "0000" idk why 0000
+  blueutil --pair "$id"
+  echo "paired"
+  sleep 0.5
+  blueutil --connect "$id"
+  echo "connected"
+}
+
+
+# sleep for argument of mins 
+slep() {
+    TIME=600
+    if [[ $1 =~ ^[0-9]+$ ]]; then
+        echo $TIME
+        TIME=$(("$1"*60))
+        echo $TIME
+        caffeinate -d -i -s -u -t $TIME
+    elif [[ $1 ]]; then
+
+    fi
+}
+
+#htop list files
+#ps -Axc | grep
+# kill all
+#
+function killnode() {
+    npx kill-port 8000
+}
+
+function disk() {
+    baobab
+    # ncdu 
+}

@@ -603,3 +603,6 @@ let g:ale_python_flake8_change_directory=0
 " leader F searches and goes to next definition
   "map <leader>F :Files <c-r>=expand("")<cr>
 map <leader>F :/<c-r>=expand("<cword>")<cr><cr>n
+" fix coc tab problem
+inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
+inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
