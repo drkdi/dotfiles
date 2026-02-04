@@ -9,31 +9,26 @@
 #    To revert: comment out Starship line, uncomment Pure lines below
 #
 # 2. REMOVED: 'type rg' runtime check - assumes rg is installed
-#    If rg is not installed, FZF will fall back gracefully
 #
-# 3. CHANGED: FZF preview uses 'bat' with syntax highlighting (falls back to cat)
-#    Install bat: brew install bat
+# 3. CHANGED: FZF preview uses 'bat' with syntax highlighting
 #
-# 4. REMOVED: Dead Oh-My-Zsh code (was never sourced)
+# 4. REMOVED: Dead Oh-My-Zsh code, graveyard comments, duplicate definitions
 #
-# 5. REMOVED: 40+ lines of commented "graveyard" code
+# 5. CHANGED: 'go' alias -> function (was running git status at startup)
 #
-# 6. REMOVED: Duplicate FZF_DEFAULT_OPTS definition
+# 6. CHANGED: 'kill' -> 'killport', 'reset' -> 'greset' (shadowed builtins)
 #
-# 7. REMOVED: Checks for non-existent files (~/.tc_settings, ~/.med_set)
+# 7. CHANGED: compinit -C (skips compaudit security check)
 #
-# 8. CHANGED: 'go' alias -> function (was running git status at startup)
+# 8. MOVED: Work aliases/functions to ~/.zshrc.local
 #
-# 9. CHANGED: 'kill' function -> 'killport' (was shadowing builtin)
+# 9. ADDED: Modern CLI aliases (eza, fd, bat, lazygit)
 #
-# 10. CHANGED: 'reset' function -> 'greset' (was shadowing builtin)
+# 10. ADDED: zsh-syntax-highlighting for command coloring
 #
-# 11. CHANGED: compinit -C (skips compaudit security check)
-#     Run 'compinit' manually after adding new completion directories
+# 11. CREATED: ~/.config/starship.toml for prompt customization
 #
-# 12. MOVED: API tokens to ~/.zshrc.local (not in main config)
-#
-# PROFILING: Uncomment these lines to measure startup time:
+# PROFILING: Uncomment to measure startup time:
 #   zmodload zsh/zprof  (at top)
 #   zprof               (at bottom)
 #
@@ -49,15 +44,13 @@ fpath+=$HOME/.zsh/pure
 fpath=(/Users/derek.dai/.docker/completions $fpath)
 
 # Starship prompt (faster than Pure)
-# Install: brew install starship
 eval "$(starship init zsh)"
 
-# REVERTED Pure prompt - uncomment these 3 lines if Starship doesn't work:
+# REVERTED Pure prompt - uncomment if Starship doesn't work:
 # autoload -U promptinit; promptinit
 # prompt pure
 
 # Optimized compinit: skip compaudit (-C flag)
-# Run `compinit` (without -C) after adding new completion directories
 autoload -Uz compinit
 compinit -C
 
@@ -71,14 +64,14 @@ export PAGER="less -S"
 export PSQL_PAGER="less -S"
 export PATH="$HOME/.local/bin:$PATH"
 
-
 # ============================================================================
 # KEY BINDINGS
 # ============================================================================
 
-set editing-mode vi
-bindkey "^[[1;3C" forward-word  # Alt+Right
-bindkey "^[[1;3D" backward-word  # Alt+Left
+bindkey -v                              # Vi mode
+bindkey "^[[1;3C" forward-word          # Alt+Right
+bindkey "^[[1;3D" backward-word         # Alt+Left
+bindkey '^R' history-incremental-search-backward  # Ctrl+R for history
 
 # ============================================================================
 # FZF
@@ -86,10 +79,22 @@ bindkey "^[[1;3D" backward-word  # Alt+Left
 
 [[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh
 
-# FZF settings (assumes rg is installed - skip runtime check)
 export FZF_DEFAULT_COMMAND='rg --files --hidden --follow --no-ignore-vcs -g "!{node_modules,.git}"'
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+export FZF_ALT_C_COMMAND='fd --type d --hidden --follow --exclude .git'
 export FZF_DEFAULT_OPTS='--height 96% --reverse --preview "bat --color=always --style=numbers --line-range=:500 {} 2>/dev/null || cat {}" --bind tab:up,shift-tab:down'
+
+# ============================================================================
+# ZSH PLUGINS
+# ============================================================================
+
+# Syntax highlighting (install: brew install zsh-syntax-highlighting)
+[[ -f /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] && \
+    source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+# Autosuggestions (install: brew install zsh-autosuggestions)
+[[ -f /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]] && \
+    source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 # ============================================================================
 # ALIASES - Navigation
@@ -97,35 +102,67 @@ export FZF_DEFAULT_OPTS='--height 96% --reverse --preview "bat --color=always --
 
 alias ..='cd ..'
 alias ...='cd ../..'
+alias ....='cd ../../..'
 alias sz='source $HOME/.zshrc; echo "sourced .zshrc"'
+
+# ============================================================================
+# ALIASES - Modern CLI Tools (install: brew install eza bat fd)
+# ============================================================================
+
+# eza (better ls) - fallback to ls if not installed
+if command -v eza &> /dev/null; then
+    alias ls='eza --icons'
+    alias ll='eza -la --icons --git'
+    alias la='eza -a --icons'
+    alias lt='eza --tree --level=2 --icons'
+    alias tree='eza --tree --icons'
+else
+    alias ll='ls -la'
+    alias la='ls -a'
+fi
+
+# bat (better cat)
+if command -v bat &> /dev/null; then
+    alias cat='bat --paging=never'
+    alias catp='bat'  # with paging
+fi
+
+# fd (better find)
+if command -v fd &> /dev/null; then
+    alias find='fd'
+fi
+
+# lazygit
+alias lg='lazygit'
 
 # ============================================================================
 # ALIASES - Git
 # ============================================================================
 
 alias g='git'
-alias gi='git init'
-alias gs='git status'
-alias gb='git branch'
+alias gs='git status -sb'
+alias gb='git branch -vv'
 alias ga='git add'
 alias gc='git commit -m'
 alias gp='git pull'
+alias gpu='git push'
 alias gco='git checkout'
-alias gcom='git checkout master'
-alias gcor='git checkout release'
+alias gcom='git checkout main'
 alias gcob='git checkout -b'
 alias gm='git merge'
 alias gst='git stash'
 alias gsp='git stash pop'
-alias gl='git log'
+alias gl='git log --oneline -20'
+alias gll='git log --graph --oneline --decorate -20'
 alias gd='git diff'
-alias gdd='git diff master..'
+alias gds='git diff --staged'
 alias gdel='git branch -d'
-alias gpom='git pull origin master'
+alias gpom='git pull origin main'
 alias merge-main='git pull origin main'
 
-# Interactive git checkout with fzf (single quotes = deferred execution)
+# Interactive git with fzf
 alias gf='git checkout $(git branch --format="%(refname:short)" | fzf)'
+alias gaf='git add $(git status -s | fzf -m | awk "{print \$2}")'  # fuzzy add
 
 # ============================================================================
 # ALIASES - Editor & Tools
@@ -136,7 +173,9 @@ alias vim='nvim'
 alias ve='nvim $HOME/.vimrc'
 alias ze='nvim $HOME/.zshrc'
 alias te='nvim $HOME/.tmux.conf'
-alias ae='nvim $HOME/.config/alacritty/alacritty.toml'
+alias ae='nvim $HOME/.alacritty.toml'
+alias ge='nvim $HOME/.gitconfig'
+alias se='nvim $HOME/.config/starship.toml'
 alias vf='nvim "$(fzf)"'
 
 alias t='tmux'
@@ -150,14 +189,11 @@ alias tags='ctags -R --exclude=node_modules --exclude=public --exclude=vendor --
 
 # Spotify
 alias s='spt'
-alias n='spt playback -n'
-alias p='spt playback -p'
-alias pp='spt playback -t'
 
 # Misc
 alias q='fc -e : -1'
 alias stats='watch -n1 istats --no-graphs'
-alias file='fzf | pbcopy'
+alias path='echo $PATH | tr ":" "\n"'  # Pretty print PATH
 
 # ============================================================================
 # FUNCTIONS - Git
@@ -165,7 +201,8 @@ alias file='fzf | pbcopy'
 
 # Open all modified files in vim
 go() {
-    nvim $(git status --porcelain | awk '{print $2}')
+    local files=$(git status --porcelain | awk '{print $2}')
+    [[ -n "$files" ]] && nvim $files || echo "No modified files"
 }
 
 # Add all and commit
@@ -226,11 +263,38 @@ killport() {
     kill -9 $(lsof -i tcp:$port -t) 2>/dev/null && echo "Killed process on port $port" || echo "No process on port $port"
 }
 
+# Make directory and cd into it
+mkcd() {
+    mkdir -p "$1" && cd "$1"
+}
+
+# Extract any archive
+extract() {
+    if [[ -f "$1" ]]; then
+        case "$1" in
+            *.tar.bz2) tar xjf "$1" ;;
+            *.tar.gz)  tar xzf "$1" ;;
+            *.tar.xz)  tar xJf "$1" ;;
+            *.bz2)     bunzip2 "$1" ;;
+            *.gz)      gunzip "$1" ;;
+            *.tar)     tar xf "$1" ;;
+            *.tbz2)    tar xjf "$1" ;;
+            *.tgz)     tar xzf "$1" ;;
+            *.zip)     unzip "$1" ;;
+            *.Z)       uncompress "$1" ;;
+            *.7z)      7z x "$1" ;;
+            *)         echo "'$1' cannot be extracted" ;;
+        esac
+    else
+        echo "'$1' is not a valid file"
+    fi
+}
+
 # ============================================================================
 # LOCAL OVERRIDES (not in git)
 # ============================================================================
 
-# Source local settings if they exist (API tokens, machine-specific config)
+# Source local settings (API tokens, work aliases, machine-specific config)
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
 
 # Uncomment for profiling: zprof

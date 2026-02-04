@@ -48,6 +48,12 @@ DOTFILES=(
     # Terminal multiplexer
     "$HOME/.tmux.conf:.tmux.conf"
     
+    # Git
+    "$HOME/.gitconfig:.gitconfig"
+    
+    # Terminal emulator (root location)
+    "$HOME/.alacritty.toml:.alacritty.toml"
+    
     # Package list
     "$HOME/.brew:.brew"
 )
@@ -65,8 +71,11 @@ DOTFILE_DIRS=(
     # Terminal emulator (standard location)
     "$HOME/.config/alacritty/alacritty.toml:.config/alacritty/alacritty.toml"
     
-    # Starship prompt (if you create one)
+    # Starship prompt
     "$HOME/.config/starship.toml:.config/starship.toml"
+    
+    # Global gitignore
+    "$HOME/.gitignore_global:.gitignore_global"
 )
 
 # Personal files (--personal flag, not synced to public git)
