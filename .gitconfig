@@ -1,0 +1,154 @@
+# ============================================================================
+# GIT CONFIGURATION
+# ============================================================================
+#
+# CHANGES MADE (2026-02-04):
+# - Added useful aliases
+# - Added delta for better diffs (install: brew install git-delta)
+# - Added pull/push defaults
+# - Added better merge/rebase settings
+#
+# ============================================================================
+
+# [user] - Set per machine or per repo:
+#   git config --global user.name "Your Name"
+#   git config --global user.email "your@email.com"
+
+[credential]
+    helper = osxkeychain
+
+# ============================================================================
+# CORE
+# ============================================================================
+
+[core]
+    editor = nvim
+    excludesfile = ~/.gitignore_global
+
+[init]
+    defaultBranch = main
+
+# ============================================================================
+# ALIASES
+# ============================================================================
+
+[alias]
+    # Status
+    s = status -sb
+    
+    # Logging
+    l = log --oneline -20
+    lg = log --graph --oneline --decorate -20
+    ll = log --graph --pretty=format:'%C(yellow)%h%Creset -%C(auto)%d%Creset %s %C(dim)(%cr) %C(blue)<%an>%Creset' -20
+    
+    # Branches
+    b = branch -vv
+    ba = branch -a -vv
+    bd = branch -d
+    bD = branch -D
+    
+    # Checkout
+    co = checkout
+    cob = checkout -b
+    com = checkout main
+    
+    # Commits
+    c = commit
+    cm = commit -m
+    ca = commit --amend
+    can = commit --amend --no-edit
+    
+    # Diff
+    d = diff
+    ds = diff --staged
+    dc = diff --cached
+    
+    # Push/Pull
+    p = pull
+    pom = pull origin main
+    pu = push
+    puf = push --force-with-lease
+    
+    # Stash
+    st = stash
+    stp = stash pop
+    stl = stash list
+    
+    # Reset
+    unstage = reset HEAD --
+    undo = reset --soft HEAD~1
+    nah = reset --hard
+    
+    # Show last commit
+    last = log -1 HEAD --stat
+    
+    # Interactive rebase
+    ri = rebase -i
+    rc = rebase --continue
+    ra = rebase --abort
+    
+    # Find
+    find = "!git ls-files | grep -i"
+    
+    # Clean merged branches
+    cleanup = "!git branch --merged | grep -v '\\*\\|main\\|master' | xargs -n 1 git branch -d"
+    
+    # Show contributors
+    contributors = shortlog -sn --no-merges
+    
+    # Today's commits
+    today = log --since=midnight --author=\"$(git config user.name)\" --oneline
+    
+    # What did I do last week?
+    week = log --since='1 week ago' --author=\"$(git config user.name)\" --oneline
+    
+    # Open in browser (requires gh cli)
+    browse = "!gh repo view --web"
+    pr = "!gh pr view --web"
+
+# ============================================================================
+# COLORS
+# ============================================================================
+
+[color]
+    ui = auto
+
+[color "branch"]
+    current = yellow bold
+    local = green
+    remote = cyan
+
+[color "diff"]
+    meta = yellow
+    frag = magenta bold
+    old = red bold
+    new = green bold
+
+[color "status"]
+    added = green
+    changed = yellow
+    untracked = red
+
+# ============================================================================
+# MERGE / REBASE
+# ============================================================================
+
+[merge]
+    conflictstyle = diff3
+    tool = vimdiff
+
+[diff]
+    colorMoved = default
+
+[pull]
+    rebase = false
+
+[push]
+    default = current
+    autoSetupRemote = true
+
+[rebase]
+    autoStash = true
+
+[fetch]
+    prune = true

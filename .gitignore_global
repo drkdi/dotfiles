@@ -1,0 +1,109 @@
+# ============================================================================
+# GLOBAL GITIGNORE
+# ============================================================================
+# This file is referenced in ~/.gitconfig
+# Applies to all git repositories on this machine
+
+# ============================================================================
+# OS FILES
+# ============================================================================
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+.directory
+
+# ============================================================================
+# EDITORS & IDEs
+# ============================================================================
+
+# Vim
+*.swp
+*.swo
+*~
+.netrwhist
+tags
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# JetBrains (IntelliJ, PyCharm, etc.)
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# ============================================================================
+# ENVIRONMENT & SECRETS
+# ============================================================================
+
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+.secrets
+credentials.json
+
+# ============================================================================
+# BUILD & DEPENDENCIES
+# ============================================================================
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+*.egg-info/
+.eggs/
+venv/
+.venv/
+
+# Ruby
+.bundle/
+vendor/bundle
+
+# ============================================================================
+# MISC
+# ============================================================================
+
+# Logs
+*.log
+
+# Compiled files
+*.o
+*.so
+*.dylib
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
+
+# Temporary files
+tmp/
+temp/
+*.tmp
