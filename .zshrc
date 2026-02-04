@@ -160,13 +160,6 @@ alias stats='watch -n1 istats --no-graphs'
 alias file='fzf | pbcopy'
 
 # ============================================================================
-# ============================================================================
-
-alias lint='bin/format -q && bin/lint --fix'
-
-# Kubernetes
-
-# ============================================================================
 # FUNCTIONS - Git
 # ============================================================================
 
@@ -231,29 +224,6 @@ qq() {
 killport() {
     local port=${1:-3000}
     kill -9 $(lsof -i tcp:$port -t) 2>/dev/null && echo "Killed process on port $port" || echo "No process on port $port"
-}
-
-# ============================================================================
-# ============================================================================
-
-ds() {
-    bash bin/dockershell
-}
-
-fleet-address-manager() {
-}
-
-fleet-annotate() {
-}
-
-kube() {
-}
-
-kube-namespace() {
-}
-
-create_dev_task() {
-    cd && sz && sh ./create_tasks_bulk.sh /Users/derek.dai/address_id_list.txt
 }
 
 # ============================================================================
