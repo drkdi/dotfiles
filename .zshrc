@@ -162,23 +162,6 @@ alias stats='watch -n1 istats --no-graphs'
 alias file='fzf | pbcopy'
 
 # ============================================================================
-# ALIASES - Work (Zipline)
-# ============================================================================
-
-alias lint='bin/format -q && bin/lint --fix'
-alias pre='bin/kubectl env preprod'
-alias shell='/Users/derek.dai/github/cloud/services/delivery_area_service/bin/ops/shell'
-alias das-diff='services/delivery_area_service/bin/deployment_diff'
-
-# Kubernetes
-alias kube-env='tools/kubectl/kubectl-env.sh'
-alias kube-get='bin/kubectl get all'
-alias kube-get-pods='bin/kubectl get pods'
-alias kube-events='bin/kubectl get events --sort-by=.metadata.creationTimestamp'
-alias kube-context='bin/kubectl config current-context'
-alias kube-namespaces='bin/kubectl get namespaces'
-
-# ============================================================================
 # FUNCTIONS - Git
 # ============================================================================
 
@@ -243,35 +226,6 @@ qq() {
 killport() {
     local port=${1:-3000}
     kill -9 $(lsof -i tcp:$port -t) 2>/dev/null && echo "Killed process on port $port" || echo "No process on port $port"
-}
-
-# ============================================================================
-# FUNCTIONS - Work (Zipline)
-# ============================================================================
-
-ds() {
-    cd ~/github/cloud/
-    bash bin/dockershell
-}
-
-fleet-address-manager() {
-    bin/localdev fleet-apps.port-forward fleet-apps.fleet-ingress fleet-apps.fleet-home-app fleet-apps.fleet-home-bff fleet-apps.address-manager-bff fleet-apps.address-manager-app fleet-apps.address-manager-devredis delivery-area-service.grpc-server delivery-area-service.devpostgres
-}
-
-fleet-annotate() {
-    bash /Users/derek.dai/github/cloud/services/fleet_apps/fleet_annotate_api/bin/run
-}
-
-kube() {
-    bin/kubectl "$@"
-}
-
-kube-namespace() {
-    bin/kubectl config set-context --current --namespace="$1"
-}
-
-create_dev_task() {
-    cd && sz && sh ./create_tasks_bulk.sh /Users/derek.dai/address_id_list.txt
 }
 
 # ============================================================================
