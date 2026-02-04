@@ -1,0 +1,950 @@
+#!/usr/bin/env bash
+#
+# Dotfiles Manager - Interactive dotfiles backup, restore & setup tool
+# Usage: dotfiles-manager [command] [options]
+#
+# Commands:
+#   (none)     - Interactive mode with menu
+#   backup     - Create backup zip of dotfiles
+#   restore    - Restore dotfiles from backup
+#   setup      - First-time machine setup
+#   sync       - Sync to git repository
+#   diff       - Show differences between local and backup
+#
+# Options:
+#   --personal - Include personal/private files
+#   --force    - Overwrite without prompting
+#   --dry-run  - Show what would be done without doing it
+#   --help     - Show this help message
+
+set -euo pipefail
+
+# ============================================================================
+# Configuration
+# ============================================================================
+
+readonly SCRIPT_NAME="dotfiles-manager"
+readonly SCRIPT_VERSION="2.0.0"
+readonly TMP_DIR="$HOME/tmp-files"
+readonly BACKUP_FILE="$HOME/Downloads/tmp-files.zip"
+readonly BACKUP_PERSONAL="$HOME/Downloads/tmp-files-PERSONAL.zip"
+readonly LOG_FILE="$HOME/.dotfiles-manager.log"
+readonly DOTFILES_REPO="$HOME/github/dotfiles"
+
+# ============================================================================
+# FILES TO BACKUP
+# Format: "source:destination" pairs
+# ============================================================================
+
+# Core dotfiles (always backed up)
+DOTFILES=(
+    # Shell
+    "$HOME/.zshrc:.zshrc"
+    "$HOME/.zshrc.local:.zshrc.local"           # Local overrides (API tokens, etc)
+    
+    # Editor
+    "$HOME/.vimrc:.vimrc"
+    
+    # Terminal multiplexer
+    "$HOME/.tmux.conf:.tmux.conf"
+    
+    # Package list
+    "$HOME/.brew:.brew"
+)
+
+# Nested config files
+DOTFILE_DIRS=(
+    # Vim plugins & settings
+    "$HOME/.vim/plugins.vim:.vim/plugins.vim"
+    "$HOME/.vim/coc-plugin.vim:.vim/coc-plugin.vim"
+    "$HOME/.vim/coc-settings.json:.vim/coc-settings.json"
+    
+    # Neovim (sources .vimrc)
+    "$HOME/.config/nvim/init.vim:.config/nvim/init.vim"
+    
+    # Terminal emulator (standard location)
+    "$HOME/.config/alacritty/alacritty.toml:.config/alacritty/alacritty.toml"
+    
+    # Starship prompt (if you create one)
+    "$HOME/.config/starship.toml:.config/starship.toml"
+)
+
+# Personal files (--personal flag, not synced to public git)
+PERSONAL_FILES=(
+    # BetterTouchTool license/preset
+    "$HOME/Derek.bettertouchtool:Derek.bettertouchtool"
+    
+    # Fonts
+    "$HOME/DankMono-Italic-Nerd-Font-Mono.otf:DankMono-Italic-Nerd-Font-Mono.otf"
+    "$HOME/DankMono-Regular-Nerd-Font-Mono.otf:DankMono-Regular-Nerd-Font-Mono.otf"
+)
+
+PERSONAL_DIRS=(
+    # Tmuxinator workspace configs (if you use them)
+    "$HOME/.config/tmuxinator:.config/tmuxinator"
+)
+
+# Brew packages to install (fallback if ~/.brew doesn't exist)
+# Based on your actual .brew file + recommended additions
+BREW_ESSENTIAL=(
+    # Terminal & Shell
+    "alacritty"
+    "tmux"
+    "tmuxinator"
+    "zsh"
+    "zsh-syntax-highlighting"
+    "starship"
+    
+    # Editors
+    "vim"
+    "neovim"
+    
+    # Search & Navigation
+    "fzf"
+    "ripgrep"
+    "ranger"
+    
+    # Development
+    "git"
+    "node"
+    "python@3.9"
+    
+    # Utilities
+    "bat"              # Better cat with syntax highlighting
+    "dust"             # Better du (disk usage)
+    "htop"             # Process viewer
+    "gnu-sed"          # GNU sed for consistency
+    
+    # Apps
+    "bettertouchtool"
+    
+    # Fun
+    "cmatrix"
+    "spotify-tui"
+)
+
+# ============================================================================
+# Colors & Formatting
+# ============================================================================
+
+if [[ -t 1 ]]; then
+    readonly RED='\033[0;31m'
+    readonly GREEN='\033[0;32m'
+    readonly YELLOW='\033[1;33m'
+    readonly BLUE='\033[0;34m'
+    readonly MAGENTA='\033[0;35m'
+    readonly CYAN='\033[0;36m'
+    readonly BOLD='\033[1m'
+    readonly DIM='\033[2m'
+    readonly RESET='\033[0m'
+else
+    readonly RED='' GREEN='' YELLOW='' BLUE='' MAGENTA='' CYAN='' BOLD='' DIM='' RESET=''
+fi
+
+# ============================================================================
+# Logging & Output
+# ============================================================================
+
+log() {
+    local level="$1"
+    shift
+    local message="$*"
+    local timestamp
+    timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    echo "[$timestamp] [$level] $message" >> "$LOG_FILE"
+}
+
+info() {
+    echo -e "${BLUE}ℹ${RESET} $*"
+    log "INFO" "$*"
+}
+
+success() {
+    echo -e "${GREEN}✓${RESET} $*"
+    log "SUCCESS" "$*"
+}
+
+warn() {
+    echo -e "${YELLOW}⚠${RESET} $*"
+    log "WARN" "$*"
+}
+
+error() {
+    echo -e "${RED}✗${RESET} $*" >&2
+    log "ERROR" "$*"
+}
+
+header() {
+    echo
+    echo -e "${BOLD}${CYAN}━━━ $* ━━━${RESET}"
+    echo
+}
+
+step() {
+    echo -e "  ${DIM}→${RESET} $*"
+}
+
+# ============================================================================
+# Utility Functions
+# ============================================================================
+
+DRY_RUN=false
+FORCE=false
+PERSONAL=false
+
+is_macos() {
+    [[ "$(uname)" == "Darwin" ]]
+}
+
+command_exists() {
+    command -v "$1" &> /dev/null
+}
+
+ensure_dir() {
+    local dir="$1"
+    if [[ ! -d "$dir" ]]; then
+        if $DRY_RUN; then
+            step "[dry-run] Would create directory: $dir"
+        else
+            mkdir -p "$dir"
+        fi
+    fi
+}
+
+# Parse "source:dest" pair
+get_src() {
+    echo "${1%%:*}"
+}
+
+get_dest() {
+    echo "${1#*:}"
+}
+
+safe_copy() {
+    local src="$1"
+    local dest="$2"
+    
+    if [[ ! -e "$src" ]]; then
+        warn "Source not found: $src"
+        return 1
+    fi
+    
+    if $DRY_RUN; then
+        step "[dry-run] Would copy: $src → $dest"
+        return 0
+    fi
+    
+    ensure_dir "$(dirname "$dest")"
+    
+    if [[ -d "$src" ]]; then
+        cp -R "$src" "$dest"
+    else
+        cp "$src" "$dest"
+    fi
+    success "Copied: $(basename "$src")"
+}
+
+confirm() {
+    local prompt="$1"
+    local default="${2:-n}"
+    
+    if $FORCE; then
+        return 0
+    fi
+    
+    local yn
+    if [[ "$default" == "y" ]]; then
+        read -rp "$prompt [Y/n] " yn
+        yn="${yn:-y}"
+    else
+        read -rp "$prompt [y/N] " yn
+        yn="${yn:-n}"
+    fi
+    
+    [[ "$yn" =~ ^[Yy] ]]
+}
+
+# ============================================================================
+# Interactive Menu
+# ============================================================================
+
+show_banner() {
+    echo -e "${CYAN}"
+    cat << 'EOF'
+    ____        __  _____ __         
+   / __ \____  / /_/ __(_) /__  _____
+  / / / / __ \/ __/ /_/ / / _ \/ ___/
+ / /_/ / /_/ / /_/ __/ / /  __(__  ) 
+/_____/\____/\__/_/ /_/_/\___/____/  
+                                     
+EOF
+    echo -e "${RESET}${DIM}v${SCRIPT_VERSION} - Dotfiles Manager${RESET}"
+    echo
+}
+
+show_menu() {
+    local options=(
+        "1) Backup dotfiles to zip"
+        "2) Restore dotfiles from zip"
+        "3) Setup new machine"
+        "4) Sync to git repository"
+        "5) Show diff (local vs backup)"
+        "6) List managed files"
+        "7) Edit configuration"
+        "8) Exit"
+    )
+    
+    echo -e "${BOLD}What would you like to do?${RESET}"
+    echo
+    
+    # Use fzf if available for better UX
+    if command_exists fzf; then
+        local choice
+        choice=$(printf '%s\n' "${options[@]}" | fzf --height=12 --reverse --prompt="Select: " --pointer="▶" --color="pointer:cyan,prompt:blue" 2>/dev/null) || choice=""
+        echo "$choice"
+    else
+        for opt in "${options[@]}"; do
+            echo "  $opt"
+        done
+        echo
+        read -rp "${BLUE}Enter choice [1-8]:${RESET} " num
+        if [[ "$num" =~ ^[1-8]$ ]]; then
+            echo "${options[$((num-1))]}"
+        fi
+    fi
+}
+
+# ============================================================================
+# Backup Functions
+# ============================================================================
+
+backup_dotfiles() {
+    local include_personal="${1:-false}"
+    local output_file="$BACKUP_FILE"
+    
+    if [[ "$include_personal" == "true" ]]; then
+        output_file="$BACKUP_PERSONAL"
+    fi
+    
+    header "Backing up dotfiles"
+    
+    # Cleanup
+    step "Cleaning up temporary directory..."
+    if $DRY_RUN; then
+        step "[dry-run] Would remove and recreate $TMP_DIR"
+    else
+        rm -rf "$TMP_DIR"
+        mkdir -p "$TMP_DIR"
+    fi
+    
+    # Copy dotfiles
+    info "Copying dotfiles..."
+    for pair in "${DOTFILES[@]}"; do
+        local src dest
+        src=$(get_src "$pair")
+        dest="$TMP_DIR/$(get_dest "$pair")"
+        safe_copy "$src" "$dest" || true
+    done
+    
+    # Copy directories
+    info "Copying directories..."
+    for pair in "${DOTFILE_DIRS[@]}"; do
+        local src dest
+        src=$(get_src "$pair")
+        dest="$TMP_DIR/$(get_dest "$pair")"
+        safe_copy "$src" "$dest" || true
+    done
+    
+    # Clone cvim gist
+    if ! $DRY_RUN; then
+        info "Cloning cvim configuration..."
+        if [[ -d "$TMP_DIR/cvim" ]]; then
+            rm -rf "$TMP_DIR/cvim"
+        fi
+        mkdir -p "$TMP_DIR/cvim"
+        if git clone --quiet https://gist.github.com/drkdi/4e03d5828cce47d42d54f9c5507479d1 "$TMP_DIR/cvim" 2>/dev/null; then
+            rm -rf "$TMP_DIR/cvim/.git"
+            success "Cloned cvim configuration"
+        else
+            warn "Failed to clone cvim gist"
+        fi
+    fi
+    
+    # Handle BTT presets
+    if ! $DRY_RUN; then
+        info "Processing BetterTouchTool presets..."
+        if ls "$HOME"/Downloads/*.bttpreset 1> /dev/null 2>&1; then
+            # Keep only most recent
+            ls -t "$HOME"/Downloads/*.bttpreset 2>/dev/null | tail -n +2 | xargs rm -f 2>/dev/null || true
+            # Copy with date
+            find "$HOME/Downloads" -maxdepth 1 -type f -name "*.bttpreset" -exec cp "{}" "$TMP_DIR/$(date +"%m-%d-%y").bttpreset" \; 2>/dev/null || true
+            success "Processed BTT presets"
+        fi
+    fi
+    
+    # Personal files
+    if [[ "$include_personal" == "true" ]]; then
+        info "Including personal files..."
+        for pair in "${PERSONAL_FILES[@]}"; do
+            local src dest
+            src=$(get_src "$pair")
+            dest="$TMP_DIR/$(get_dest "$pair")"
+            safe_copy "$src" "$dest" || true
+        done
+        for pair in "${PERSONAL_DIRS[@]}"; do
+            local src dest
+            src=$(get_src "$pair")
+            dest="$TMP_DIR/$(get_dest "$pair")"
+            safe_copy "$src" "$dest" || true
+        done
+    fi
+    
+    # Create zip
+    if ! $DRY_RUN; then
+        info "Creating zip archive..."
+        (cd "$TMP_DIR" && zip -rq "$HOME/tmp-files.zip" .)
+        mv "$HOME/tmp-files.zip" "$output_file"
+        rm -rf "$TMP_DIR"
+        success "Created: $output_file"
+    else
+        step "[dry-run] Would create: $output_file"
+    fi
+    
+    echo
+    success "Backup complete!"
+}
+
+# ============================================================================
+# Restore Functions
+# ============================================================================
+
+restore_dotfiles() {
+    local use_personal="${1:-false}"
+    local force="${2:-false}"
+    local source_file="$BACKUP_FILE"
+    
+    if [[ "$use_personal" == "true" ]]; then
+        source_file="$BACKUP_PERSONAL"
+    fi
+    
+    header "Restoring dotfiles"
+    
+    if [[ ! -f "$source_file" ]]; then
+        error "Backup file not found: $source_file"
+        return 1
+    fi
+    
+    if [[ "$force" == "true" ]] || $FORCE; then
+        info "Force restoring from $source_file..."
+        if ! $DRY_RUN; then
+            unzip -o "$source_file" -d "$HOME"
+            success "Restored all dotfiles"
+        else
+            step "[dry-run] Would extract: $source_file → $HOME"
+        fi
+    else
+        # Interactive diff mode
+        info "Extracting to temporary location for comparison..."
+        local temp_extract="$HOME/Downloads/tmp-files"
+        
+        if ! $DRY_RUN; then
+            rm -rf "$temp_extract"
+            mkdir -p "$temp_extract"
+            unzip -o "$source_file" -d "$temp_extract"
+            
+            info "Comparing files (use 'do' to accept, 'dp' to reject in vimdiff)..."
+            
+            while IFS= read -r line; do
+                local file1 file2
+                file1=$(echo "$line" | sed 's/^Files //;s/ and .*$//')
+                file2=$(echo "$line" | sed 's/^.* and //;s/ differ$//')
+                
+                # Skip system files
+                if [[ "$file1" == *"DS_Store"* ]] || [[ "$file1" == *"cvim"* ]]; then
+                    continue
+                fi
+                
+                echo
+                info "Difference found: $(basename "$file1")"
+                if confirm "Review changes?"; then
+                    vimdiff "$file1" "$file2"
+                fi
+            done < <(diff -rq "$HOME" "$temp_extract" 2>/dev/null | grep 'differ$' || true)
+            
+            rm -rf "$temp_extract"
+        else
+            step "[dry-run] Would compare and interactively merge files"
+        fi
+    fi
+    
+    echo
+    success "Restore complete!"
+}
+
+# ============================================================================
+# Setup Functions
+# ============================================================================
+
+setup_new_machine() {
+    header "Setting up new machine"
+    
+    if ! is_macos; then
+        warn "Some features are macOS-specific"
+    fi
+    
+    # Show what will be done
+    info "This will:"
+    echo "  1. Install Homebrew (if not installed)"
+    echo "  2. Install Oh My Zsh (if not installed)"
+    echo "  3. Install essential packages via Homebrew"
+    echo "  4. Configure keyboard settings (fast repeat)"
+    echo "  5. Install fonts"
+    echo "  6. Install BetterTouchTool preset"
+    echo "  7. Restore dotfiles from backup"
+    echo
+    
+    if ! confirm "Proceed with setup?" "y"; then
+        info "Setup cancelled"
+        return 0
+    fi
+    
+    # 1. Homebrew
+    header "Installing Homebrew"
+    if command_exists brew; then
+        success "Homebrew already installed"
+    else
+        if $DRY_RUN; then
+            step "[dry-run] Would install Homebrew"
+        else
+            info "Installing Homebrew..."
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+            
+            # Add to path for Apple Silicon
+            if [[ -f "/opt/homebrew/bin/brew" ]]; then
+                eval "$(/opt/homebrew/bin/brew shellenv)"
+            fi
+            success "Homebrew installed"
+        fi
+    fi
+    
+    # 2. Oh My Zsh
+    header "Installing Oh My Zsh"
+    if [[ -d "$HOME/.oh-my-zsh" ]]; then
+        success "Oh My Zsh already installed"
+    else
+        if $DRY_RUN; then
+            step "[dry-run] Would install Oh My Zsh"
+        else
+            info "Installing Oh My Zsh..."
+            RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+            success "Oh My Zsh installed"
+        fi
+    fi
+    
+    # 3. Brew packages
+    header "Installing packages"
+    if $DRY_RUN; then
+        step "[dry-run] Would install: ${BREW_ESSENTIAL[*]}"
+    else
+        # Load from .brew file if exists
+        if [[ -f "$HOME/.brew" ]]; then
+            info "Installing packages from ~/.brew..."
+            while IFS= read -r pkg || [[ -n "$pkg" ]]; do
+                [[ -z "$pkg" || "$pkg" =~ ^# ]] && continue
+                if brew list "$pkg" &>/dev/null; then
+                    step "$pkg (already installed)"
+                else
+                    step "Installing $pkg..."
+                    brew install "$pkg" 2>/dev/null || warn "Failed to install $pkg"
+                fi
+            done < "$HOME/.brew"
+        else
+            info "Installing essential packages..."
+            for pkg in "${BREW_ESSENTIAL[@]}"; do
+                if brew list "$pkg" &>/dev/null; then
+                    step "$pkg (already installed)"
+                else
+                    step "Installing $pkg..."
+                    brew install "$pkg" 2>/dev/null || warn "Failed to install $pkg"
+                fi
+            done
+        fi
+        success "Packages installed"
+    fi
+    
+    # 4. Keyboard settings (macOS)
+    if is_macos; then
+        header "Configuring keyboard"
+        if $DRY_RUN; then
+            step "[dry-run] Would configure keyboard repeat settings"
+        else
+            info "Setting fast key repeat..."
+            defaults write -g InitialKeyRepeat -int 10  # Normal min: 15 (225ms)
+            defaults write -g KeyRepeat -int 1          # Normal min: 2 (30ms)
+            defaults write -g ApplePressAndHoldEnabled -bool false
+            success "Keyboard configured (may require logout)"
+        fi
+    fi
+    
+    # 5. Fonts
+    header "Installing fonts"
+    if ls "$HOME"/*.otf 1> /dev/null 2>&1 || ls "$HOME"/*.ttf 1> /dev/null 2>&1; then
+        if $DRY_RUN; then
+            step "[dry-run] Would install fonts"
+        else
+            for font in "$HOME"/*.otf "$HOME"/*.ttf; do
+                [[ -e "$font" ]] || continue
+                open "$font"
+                step "Installing: $(basename "$font")"
+            done
+            success "Fonts opened for installation"
+        fi
+    else
+        info "No font files found in home directory"
+    fi
+    
+    # 6. BetterTouchTool
+    header "Installing BetterTouchTool preset"
+    if ls "$HOME"/*.bttpreset 1> /dev/null 2>&1; then
+        if $DRY_RUN; then
+            step "[dry-run] Would install BTT preset"
+        else
+            ls -t "$HOME"/*.bttpreset 2>/dev/null | head -1 | xargs open
+            success "BTT preset opened"
+        fi
+    else
+        info "No BTT preset found"
+    fi
+    
+    # 7. Restore dotfiles
+    header "Restoring dotfiles"
+    if [[ -f "$BACKUP_FILE" ]]; then
+        restore_dotfiles false true
+    else
+        warn "No backup file found at $BACKUP_FILE"
+        info "Run 'dotfiles-manager backup' first on your source machine"
+    fi
+    
+    echo
+    echo -e "${GREEN}${BOLD}━━━ Setup Complete! ━━━${RESET}"
+    echo
+    info "Please restart your terminal or run: source ~/.zshrc"
+}
+
+# ============================================================================
+# Sync Functions
+# ============================================================================
+
+sync_to_git() {
+    header "Syncing to git repository"
+    
+    local dotfiles_dir=""
+    
+    # Find dotfiles directory
+    for dir in $(find "$HOME/Desktop" -maxdepth 2 -type d -name "dotfiles" 2>/dev/null); do
+        dotfiles_dir="$dir"
+        break
+    done
+    
+    if [[ -z "$dotfiles_dir" ]]; then
+        dotfiles_dir="$DOTFILES_REPO"
+    fi
+    
+    if [[ ! -d "$dotfiles_dir" ]]; then
+        error "Dotfiles repository not found"
+        info "Expected at: $dotfiles_dir"
+        return 1
+    fi
+    
+    info "Using repository: $dotfiles_dir"
+    
+    # First backup
+    backup_dotfiles false
+    
+    if $DRY_RUN; then
+        step "[dry-run] Would extract backup to $dotfiles_dir"
+        step "[dry-run] Would commit and push changes"
+    else
+        # Clean and extract
+        rm -f "$dotfiles_dir"/*.bttpreset
+        unzip -o "$BACKUP_FILE" -d "$dotfiles_dir"
+        
+        # Git operations
+        cd "$dotfiles_dir"
+        git add .
+        
+        if git diff --cached --quiet; then
+            info "No changes to commit"
+        else
+            local commit_msg="Update dotfiles $(date +'%Y-%m-%d %H:%M')"
+            git commit -m "$commit_msg"
+            
+            if confirm "Push to remote?"; then
+                git push
+                success "Pushed to remote"
+                
+                # Open in browser
+                if is_macos && command_exists open; then
+                    open "https://github.com/drkdi/dotfiles/commits/main"
+                fi
+            fi
+        fi
+    fi
+    
+    echo
+    success "Sync complete!"
+}
+
+# ============================================================================
+# Diff Functions
+# ============================================================================
+
+show_diff() {
+    header "Comparing local files with backup"
+    
+    if [[ ! -f "$BACKUP_FILE" ]]; then
+        error "Backup file not found: $BACKUP_FILE"
+        return 1
+    fi
+    
+    local temp_dir
+    temp_dir=$(mktemp -d)
+    unzip -q "$BACKUP_FILE" -d "$temp_dir"
+    
+    local has_diff=false
+    
+    for pair in "${DOTFILES[@]}"; do
+        local src dest_rel backup_file
+        src=$(get_src "$pair")
+        dest_rel=$(get_dest "$pair")
+        backup_file="$temp_dir/$dest_rel"
+        
+        if [[ ! -f "$src" ]]; then
+            warn "Local missing: $src"
+            has_diff=true
+        elif [[ ! -f "$backup_file" ]]; then
+            warn "Backup missing: $dest_rel"
+            has_diff=true
+        elif ! diff -q "$src" "$backup_file" &>/dev/null; then
+            echo -e "${YELLOW}Modified:${RESET} $(basename "$src")"
+            if confirm "  Show diff?"; then
+                diff --color=auto "$src" "$backup_file" || true
+            fi
+            has_diff=true
+        else
+            echo -e "${GREEN}Unchanged:${RESET} $(basename "$src")"
+        fi
+    done
+    
+    rm -rf "$temp_dir"
+    
+    if ! $has_diff; then
+        success "All files are in sync!"
+    fi
+}
+
+# ============================================================================
+# List Functions
+# ============================================================================
+
+list_managed() {
+    header "Managed Files"
+    
+    echo -e "${BOLD}Dotfiles:${RESET}"
+    for pair in "${DOTFILES[@]}"; do
+        local src
+        src=$(get_src "$pair")
+        if [[ -f "$src" ]]; then
+            echo -e "  ${GREEN}✓${RESET} $src"
+        else
+            echo -e "  ${RED}✗${RESET} $src ${DIM}(not found)${RESET}"
+        fi
+    done
+    
+    echo
+    echo -e "${BOLD}Directories:${RESET}"
+    for pair in "${DOTFILE_DIRS[@]}"; do
+        local src
+        src=$(get_src "$pair")
+        if [[ -e "$src" ]]; then
+            echo -e "  ${GREEN}✓${RESET} $src"
+        else
+            echo -e "  ${RED}✗${RESET} $src ${DIM}(not found)${RESET}"
+        fi
+    done
+    
+    echo
+    echo -e "${BOLD}Personal files (--personal):${RESET}"
+    for pair in "${PERSONAL_FILES[@]}"; do
+        local src
+        src=$(get_src "$pair")
+        if [[ -f "$src" ]]; then
+            echo -e "  ${GREEN}✓${RESET} $src"
+        else
+            echo -e "  ${DIM}○${RESET} $src ${DIM}(not found)${RESET}"
+        fi
+    done
+}
+
+# ============================================================================
+# Help
+# ============================================================================
+
+show_help() {
+    cat << EOF
+${BOLD}$SCRIPT_NAME${RESET} v$SCRIPT_VERSION - Dotfiles backup, restore & setup tool
+
+${BOLD}USAGE:${RESET}
+    $SCRIPT_NAME [command] [options]
+
+${BOLD}COMMANDS:${RESET}
+    (none)          Interactive mode with menu
+    backup          Create backup zip of dotfiles
+    restore         Restore dotfiles from backup  
+    setup           First-time machine setup
+    sync            Sync to git repository
+    diff            Show differences between local and backup
+    list            List all managed files
+
+${BOLD}OPTIONS:${RESET}
+    --personal      Include personal/private files
+    --force         Overwrite without prompting
+    --dry-run       Show what would be done without doing it
+    --help, -h      Show this help message
+    --version, -v   Show version
+
+${BOLD}EXAMPLES:${RESET}
+    $SCRIPT_NAME                    # Interactive mode
+    $SCRIPT_NAME backup             # Backup dotfiles
+    $SCRIPT_NAME backup --personal  # Include personal files
+    $SCRIPT_NAME restore --force    # Restore without prompts
+    $SCRIPT_NAME setup              # Setup new machine
+    $SCRIPT_NAME sync               # Sync to git repo
+
+${BOLD}FILES:${RESET}
+    Backup:   $BACKUP_FILE
+    Personal: $BACKUP_PERSONAL
+    Log:      $LOG_FILE
+
+EOF
+}
+
+# ============================================================================
+# Main
+# ============================================================================
+
+main() {
+    local command=""
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            backup|restore|setup|sync|diff|list)
+                command="$1"
+                ;;
+            --personal|-p)
+                PERSONAL=true
+                ;;
+            --force|-f)
+                FORCE=true
+                ;;
+            --dry-run|-n)
+                DRY_RUN=true
+                ;;
+            --help|-h)
+                show_help
+                exit 0
+                ;;
+            --version|-v)
+                echo "$SCRIPT_NAME v$SCRIPT_VERSION"
+                exit 0
+                ;;
+            *)
+                error "Unknown option: $1"
+                echo "Use --help for usage information"
+                exit 1
+                ;;
+        esac
+        shift
+    done
+    
+    # Show dry-run notice
+    if $DRY_RUN; then
+        warn "DRY RUN MODE - No changes will be made"
+        echo
+    fi
+    
+    # Execute command or show menu
+    if [[ -n "$command" ]]; then
+        case "$command" in
+            backup)
+                backup_dotfiles "$PERSONAL"
+                ;;
+            restore)
+                restore_dotfiles "$PERSONAL" "$FORCE"
+                ;;
+            setup)
+                setup_new_machine
+                ;;
+            sync)
+                sync_to_git
+                ;;
+            diff)
+                show_diff
+                ;;
+            list)
+                list_managed
+                ;;
+        esac
+    else
+        # Interactive mode
+        show_banner
+        
+        while true; do
+            choice=$(show_menu)
+            
+            case "$choice" in
+                *"Backup"*)
+                    if confirm "Include personal files?"; then
+                        backup_dotfiles true
+                    else
+                        backup_dotfiles false
+                    fi
+                    ;;
+                *"Restore"*)
+                    if confirm "Use personal backup?"; then
+                        restore_dotfiles true
+                    else
+                        restore_dotfiles false
+                    fi
+                    ;;
+                *"Setup"*)
+                    setup_new_machine
+                    ;;
+                *"Sync"*)
+                    sync_to_git
+                    ;;
+                *"diff"*)
+                    show_diff
+                    ;;
+                *"List"*)
+                    list_managed
+                    ;;
+                *"Edit"*)
+                    ${EDITOR:-vim} "${BASH_SOURCE[0]}"
+                    ;;
+                *"Exit"*|"")
+                    info "Goodbye!"
+                    exit 0
+                    ;;
+            esac
+            
+            echo
+            if ! confirm "Do something else?"; then
+                break
+            fi
+        done
+    fi
+}
+
+main "$@"

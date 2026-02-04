@@ -1,0 +1,262 @@
+# ============================================================================
+# ALACRITTY CONFIGURATION
+# ============================================================================
+# Standard location: ~/.config/alacritty/alacritty.toml
+# Docs: https://alacritty.org/config-alacritty.html
+#
+# KEYBINDINGS SUMMARY:
+#   Cmd+H/J/K/L      = Vim-style pane navigation (sends C-h/j/k/l)
+#   Cmd+Shift+H      = tmux horizontal split (C-b ")
+#   Cmd+Shift+L      = tmux vertical split (C-b %)
+#   Cmd+Shift+J/K    = tmux prev/next window (C-b p/n)
+#   Cmd+Shift+X      = tmux kill pane (C-b x)
+#   Cmd+D            = Send C-d (EOF/exit)
+#   Cmd+C            = tmux new window (C-b c)
+#   Cmd+S            = Vim save (:w)
+#   Option+Space     = Toggle vi mode
+#
+# ============================================================================
+
+[general]
+live_config_reload = true
+
+[env]
+TERM = "xterm-256color"
+
+# ============================================================================
+# WINDOW
+# ============================================================================
+
+[window]
+decorations = "None"
+opacity = 0.85
+dynamic_title = true
+dynamic_padding = true
+
+[window.dimensions]
+columns = 120
+lines = 36
+
+[window.padding]
+x = 8
+y = 8
+
+# ============================================================================
+# FONT
+# ============================================================================
+
+[font]
+size = 17.5
+
+[font.normal]
+family = "DankMono Nerd Font Mono"
+style = "Regular"
+
+[font.bold]
+family = "DankMono Nerd Font Mono"
+style = "Bold"
+
+[font.italic]
+family = "DankMono Nerd Font Mono"
+style = "Italic"
+
+[font.bold_italic]
+family = "DankMono Nerd Font Mono"
+style = "Bold Italic"
+
+# ============================================================================
+# CURSOR
+# ============================================================================
+
+[cursor]
+unfocused_hollow = true
+
+[cursor.style]
+shape = "Block"
+blinking = "Always"
+
+# ============================================================================
+# SCROLLING
+# ============================================================================
+
+[scrolling]
+history = 10000
+multiplier = 5
+
+# ============================================================================
+# MOUSE
+# ============================================================================
+
+[mouse]
+hide_when_typing = true
+
+# ============================================================================
+# SELECTION
+# ============================================================================
+
+[selection]
+semantic_escape_chars = ",│`|:\"' ()[]{}<>\t"
+
+# ============================================================================
+# HINTS (clickable URLs with Cmd+click)
+# ============================================================================
+
+[hints]
+alphabet = "jfkdls;ahgurieowpq"
+
+[[hints.enabled]]
+command = "open"
+hyperlinks = true
+post_processing = true
+persist = false
+mouse.enabled = true
+mouse.mods = "Command"
+binding.key = "U"
+binding.mods = "Command|Shift"
+regex = "(ipfs:|ipns:|magnet:|mailto:|gemini://|gopher://|https://|http://|news:|file:|git://|ssh:|ftp://)[^\u0000-\u001F\u007F-\u009F<>\"\\s{-}\\^⟨⟩`]+"
+
+# ============================================================================
+# COLORS - Catppuccin Macchiato
+# ============================================================================
+
+[colors]
+draw_bold_text_with_bright_colors = true
+
+[colors.primary]
+background = "#24273A"
+foreground = "#CAD3F5"
+bright_foreground = "#CAD3F5"
+dim_foreground = "#CAD3F5"
+
+[colors.cursor]
+cursor = "#F4DBD6"
+text = "#24273A"
+
+[colors.vi_mode_cursor]
+cursor = "#B7BDF8"
+text = "#24273A"
+
+[colors.selection]
+background = "#F4DBD6"
+text = "#24273A"
+
+[colors.search.matches]
+background = "#A5ADCB"
+foreground = "#24273A"
+
+[colors.search.focused_match]
+background = "#A6DA95"
+foreground = "#24273A"
+
+[colors.hints.start]
+background = "#EED49F"
+foreground = "#24273A"
+
+[colors.hints.end]
+background = "#A5ADCB"
+foreground = "#24273A"
+
+[colors.normal]
+black = "#494D64"
+red = "#ED8796"
+green = "#A6DA95"
+yellow = "#EED49F"
+blue = "#8AADF4"
+magenta = "#F5BDE6"
+cyan = "#8BD5CA"
+white = "#B8C0E0"
+
+[colors.bright]
+black = "#5B6078"
+red = "#ED8796"
+green = "#A6DA95"
+yellow = "#EED49F"
+blue = "#8AADF4"
+magenta = "#F5BDE6"
+cyan = "#8BD5CA"
+white = "#A5ADCB"
+
+[colors.dim]
+black = "#494D64"
+red = "#ED8796"
+green = "#A6DA95"
+yellow = "#EED49F"
+blue = "#8AADF4"
+magenta = "#F5BDE6"
+cyan = "#8BD5CA"
+white = "#B8C0E0"
+
+# ============================================================================
+# KEYBOARD BINDINGS
+# ============================================================================
+
+# Tmux window navigation
+[[keyboard.bindings]]
+chars = "\u0002n"  # C-b n (next window)
+key = "K"
+mods = "Command|Shift"
+
+[[keyboard.bindings]]
+chars = "\u0002p"  # C-b p (previous window)
+key = "J"
+mods = "Command|Shift"
+
+# Tmux splits
+[[keyboard.bindings]]
+chars = "\u0002\u0025"  # C-b % (vertical split)
+key = "L"
+mods = "Command|Shift"
+
+[[keyboard.bindings]]
+chars = "\u0002\""  # C-b " (horizontal split)
+key = "H"
+mods = "Command|Shift"
+
+# Tmux kill pane
+[[keyboard.bindings]]
+chars = "\u0002x"  # C-b x (kill pane)
+key = "X"
+mods = "Command|Shift"
+
+# Vim-style pane navigation (C-h/j/k/l)
+[[keyboard.bindings]]
+chars = "\b"  # C-h
+key = "H"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\n"  # C-j
+key = "J"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u000B"  # C-k
+key = "K"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\f"  # C-l
+key = "L"
+mods = "Command"
+
+# Other shortcuts
+[[keyboard.bindings]]
+chars = "\u0004"  # C-d (EOF/exit)
+key = "D"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u0002c"  # C-b c (new window)
+key = "C"
+mods = "Command"
+
+[[keyboard.bindings]]
+action = "ToggleViMode"
+key = "Space"
+mods = "Option"
+
+# Vim save (Esc + :w + Enter)
+[[keyboard.bindings]]
+chars = "\u001B:w\n"
+key = "S"
+mods = "Command"

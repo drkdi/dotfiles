@@ -1,26 +1,55 @@
-alacritty
-bettertouchtool
-cmatrix
-dust
-fzf
-git
-grep
-gnu-sed
-htop
-neovim
-node
-notion
-notion-enhanced
-python@3.9
-pure
-ranger
-redis
-ripgrep
-spotify
-spotify-tui
-tmux
-tmuxinator
-vim
-xclip
+# ============================================================================
+# Homebrew packages for dotfiles setup
+# Install all: for pkg in $(cat ~/.brew); do brew install "$pkg"; done
+# ============================================================================
+
+# --- Shell & Prompt ---
 zsh
 zsh-syntax-highlighting
+starship                    # Fast, customizable prompt (replaces pure)
+
+# --- Terminal ---
+alacritty
+tmux
+tmuxinator
+
+# --- Editors ---
+vim
+neovim
+
+# --- Search & Navigation ---
+fzf
+ripgrep                     # rg - fast grep
+bat                         # Better cat with syntax highlighting
+ranger
+universal-ctags             # For vim tags
+
+# --- Git ---
+git
+lazygit                     # TUI for git
+
+# --- Development ---
+node
+python@3.9
+
+# --- Utilities ---
+dust                        # Better du (disk usage)
+htop                        # Process viewer
+gnu-sed                     # GNU sed for consistency
+grep                        # GNU grep
+eza                         # Better ls (replaces exa)
+fd                          # Better find
+watch                       # For periodic commands
+jq                          # JSON processor
+
+# --- Apps (casks - install with: brew install --cask <name>) ---
+# bettertouchtool           # Install as cask
+# spotify                   # Install as cask
+
+# --- Fun ---
+cmatrix
+spotify-tui                 # Spotify CLI (spt)
+
+# --- Optional (uncomment if needed) ---
+# redis
+# pure                      # Old prompt (replaced by starship)
