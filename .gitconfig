@@ -154,6 +154,6 @@
 
 [fetch]
     prune = true
-[user]
-	name = Derek
-	email = you@example.com
+# [user] - Set per machine (not stored in repo):
+#   git config --global user.name "Your Name"
+#   git config --global user.email "you@example.com"

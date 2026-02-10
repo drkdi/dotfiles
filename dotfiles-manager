@@ -651,7 +651,33 @@ setup_new_machine() {
         warn "Neovim not found — skipping plugin bootstrap"
     fi
     
-    # 9. Git performance (fsmonitor + untracked cache)
+    # 9. Git identity (not stored in repo)
+    header "Configuring Git identity"
+    if $DRY_RUN; then
+        step "[dry-run] Would prompt for git user.name and user.email"
+    else
+        local current_name
+        current_name=$(git config --global user.name 2>/dev/null || true)
+        local current_email
+        current_email=$(git config --global user.email 2>/dev/null || true)
+
+        if [[ -n "$current_name" && -n "$current_email" ]]; then
+            info "Git identity already set: $current_name <$current_email>"
+        else
+            info "No global Git identity found — setting one now."
+            if [[ -z "$current_name" ]]; then
+                read -rp "  Enter your name for git commits: " current_name
+                git config --global user.name "$current_name"
+            fi
+            if [[ -z "$current_email" ]]; then
+                read -rp "  Enter your email for git commits: " current_email
+                git config --global user.email "$current_email"
+            fi
+            success "Git identity set: $current_name <$current_email>"
+        fi
+    fi
+
+    # 10. Git performance (fsmonitor + untracked cache)
     header "Optimizing Git performance"
     if $DRY_RUN; then
         step "[dry-run] Would enable core.fsmonitor and core.untrackedcache globally"
