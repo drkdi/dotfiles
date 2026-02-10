@@ -1,3 +1,10 @@
+" ============================================================================
+" CoC Plugin Config  (VIM-ONLY FALLBACK)
+"
+" NOTE: This file is only used by regular Vim (sourced by .vimrc).
+"   Neovim uses native LSP + nvim-cmp — see ~/.config/nvim/init.lua
+" ============================================================================
+"
 " Use tab for trigger completion with characters ahead and navigate.
 " NOTE: Use command ':verbose imap <tab>' to make sure tab is not mapped by
 " other plugin before putting this into your config.

@@ -170,10 +170,10 @@ alias gaf='git add $(git status -s | fzf -m | awk "{print \$2}")'  # fuzzy add
 
 alias v='nvim'
 alias vim='nvim'
-alias ve='nvim $HOME/.vimrc'
+alias ve='nvim $HOME/.config/nvim/init.lua'
 alias ze='nvim $HOME/.zshrc'
 alias te='nvim $HOME/.tmux.conf'
-alias ae='nvim $HOME/.alacritty.toml'
+alias ae='nvim $HOME/.config/alacritty/alacritty.toml'
 alias ge='nvim $HOME/.gitconfig'
 alias se='nvim $HOME/.config/starship.toml'
 alias vf='nvim "$(fzf)"'
@@ -298,3 +298,8 @@ extract() {
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
 
 # Uncomment for profiling: zprof
+
+# Source any env files from ~/.config subdirectories
+for env_file in "$HOME"/.config/*/env; do
+    [[ -f "$env_file" ]] && source "$env_file"
+done

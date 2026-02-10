@@ -24,6 +24,8 @@
 [core]
     editor = nvim
     excludesfile = ~/.gitignore_global
+	fsmonitor = true
+	untrackedcache = true
 
 [init]
     defaultBranch = main
@@ -152,3 +154,6 @@
 
 [fetch]
     prune = true
+[user]
+	name = Derek
+	email = you@example.com

@@ -27,8 +27,9 @@ add_newline = false
 # ============================================================================
 
 [directory]
-truncation_length = 3
-truncate_to_repo = true
+# Show full path instead of truncated
+truncation_length = 0
+truncate_to_repo = false
 style = "bold cyan"
 read_only = " 🔒"
 
@@ -42,17 +43,17 @@ symbol = " "
 style = "bold purple"
 
 [git_status]
-format = '([$all_status$ahead_behind]($style) )'
+format = '([$conflicted$stashed$staged$modified$renamed$untracked$deleted$ahead_behind]($style) )'
 style = "bold yellow"
-conflicted = "="
-ahead = "⇡${count}"
-behind = "⇣${count}"
-diverged = "⇕⇡${ahead_count}⇣${behind_count}"
-untracked = "?${count}"
-stashed = "$${count}"
-modified = "!${count}"
-staged = "+${count}"
-renamed = "»${count}"
+conflicted = "= "
+ahead = "⇡${count} "
+behind = "⇣${count} "
+diverged = "⇕⇡${ahead_count}⇣${behind_count} "
+untracked = "?${count} "
+stashed = "\\$${count} "
+modified = "!${count} "
+staged = "+${count} "
+renamed = "»${count} "
 deleted = "✘${count}"
 
 # ============================================================================
