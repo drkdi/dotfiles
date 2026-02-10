@@ -1,5 +1,8 @@
 " ============================================================================
-" PLUGINS - Performance Optimized
+" PLUGINS - Performance Optimized  (VIM-ONLY FALLBACK)
+"
+" NOTE: This file is only used by regular Vim (sourced by .vimrc).
+"   Neovim uses lazy.nvim — see ~/.config/nvim/init.lua
 " ============================================================================
 "
 " CHANGES MADE (2026-02-04):

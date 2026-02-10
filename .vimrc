@@ -1,5 +1,8 @@
 " ============================================================================
-" VIMRC - Performance Optimized
+" VIMRC - Performance Optimized  (VIM-ONLY FALLBACK)
+"
+" NOTE: This file is only used by regular Vim. Neovim uses
+"   ~/.config/nvim/init.lua  (native Lua config with lazy.nvim + native LSP)
 " ============================================================================
 "
 " CHANGES MADE (2026-02-04):

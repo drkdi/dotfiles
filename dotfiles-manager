@@ -42,7 +42,7 @@ DOTFILES=(
     "$HOME/.zshrc:.zshrc"
     "$HOME/.zshrc.local:.zshrc.local"           # Local overrides (API tokens, etc)
     
-    # Editor
+    # Editor (Vim fallback — regular Vim still sources this)
     "$HOME/.vimrc:.vimrc"
     
     # Terminal multiplexer
@@ -60,13 +60,13 @@ DOTFILES=(
 
 # Nested config files
 DOTFILE_DIRS=(
-    # Vim plugins & settings
+    # Neovim — primary editor config (native Lua, lazy.nvim + native LSP)
+    "$HOME/.config/nvim/init.lua:.config/nvim/init.lua"
+    
+    # Vim fallback — only used when running regular Vim (not Neovim)
     "$HOME/.vim/plugins.vim:.vim/plugins.vim"
     "$HOME/.vim/coc-plugin.vim:.vim/coc-plugin.vim"
     "$HOME/.vim/coc-settings.json:.vim/coc-settings.json"
-    
-    # Neovim (sources .vimrc)
-    "$HOME/.config/nvim/init.vim:.config/nvim/init.vim"
     
     # Terminal emulator (standard location)
     "$HOME/.config/alacritty/alacritty.toml:.config/alacritty/alacritty.toml"
@@ -510,6 +510,8 @@ setup_new_machine() {
     echo "  5. Install fonts"
     echo "  6. Install BetterTouchTool preset"
     echo "  7. Restore dotfiles from backup"
+    echo "  8. Bootstrap Neovim plugins (lazy.nvim)"
+    echo "  9. Optimize Git (fsmonitor + untracked cache)"
     echo
     
     if ! confirm "Proceed with setup?" "y"; then
@@ -632,6 +634,37 @@ setup_new_machine() {
     else
         warn "No backup file found at $BACKUP_FILE"
         info "Run 'dotfiles-manager backup' first on your source machine"
+    fi
+    
+    # 8. Bootstrap Neovim plugins
+    header "Bootstrapping Neovim"
+    if command_exists nvim; then
+        if $DRY_RUN; then
+            step "[dry-run] Would install Neovim plugins via lazy.nvim"
+        else
+            info "Installing Neovim plugins (lazy.nvim sync)..."
+            nvim --headless "+Lazy! sync" +qa 2>/dev/null && \
+                success "Neovim plugins installed" || \
+                warn "Neovim plugin install had issues (run :Lazy sync manually)"
+        fi
+    else
+        warn "Neovim not found — skipping plugin bootstrap"
+    fi
+    
+    # 9. Git performance (fsmonitor + untracked cache)
+    header "Optimizing Git performance"
+    if $DRY_RUN; then
+        step "[dry-run] Would enable core.fsmonitor and core.untrackedcache globally"
+    else
+        info "Enabling filesystem monitor daemon (avoids stat-ing every file)..."
+        git config --global core.fsmonitor true
+        success "core.fsmonitor enabled"
+        
+        info "Enabling untracked file cache (avoids re-scanning directories)..."
+        git config --global core.untrackedcache true
+        success "core.untrackedcache enabled"
+        
+        info "These speed up git status/diff/add in large repos (e.g. 39K+ files: 1.7s → 0.13s)"
     fi
     
     echo
