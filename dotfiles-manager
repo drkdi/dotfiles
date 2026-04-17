@@ -47,6 +47,7 @@ DOTFILES=(
     # Shell
     "$HOME/.zshrc:.zshrc"
     "$HOME/.zshrc.local:.zshrc.local"           # Local overrides (API tokens, etc)
+    "$HOME/display-mode:display-mode"
     
     # Editor (Vim fallback — regular Vim still sources this)
     "$HOME/.vimrc:.vimrc"
