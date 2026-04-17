@@ -31,6 +31,12 @@ readonly BACKUP_PERSONAL="$HOME/Downloads/tmp-files-PERSONAL.zip"
 readonly LOG_FILE="$HOME/.dotfiles-manager.log"
 readonly DOTFILES_REPO="$HOME/github/dotfiles"
 
+# macOS keyboard repeat defaults for new-machine setup.
+# These are faster than the normal System Settings minimums.
+readonly MACOS_INITIAL_KEY_REPEAT=10
+readonly MACOS_KEY_REPEAT=1
+readonly MACOS_PRESS_AND_HOLD=false
+
 # ============================================================================
 # FILES TO BACKUP
 # Format: "source:destination" pairs
@@ -120,6 +126,7 @@ BREW_ESSENTIAL=(
     
     # Utilities
     "bat"              # Better cat with syntax highlighting
+    "baobab"           # Disk usage / storage inspection CLI
     "dust"             # Better du (disk usage)
     "htop"             # Process viewer
     "gnu-sed"          # GNU sed for consistency
@@ -590,9 +597,9 @@ setup_new_machine() {
             step "[dry-run] Would configure keyboard repeat settings"
         else
             info "Setting fast key repeat..."
-            defaults write -g InitialKeyRepeat -int 10  # Normal min: 15 (225ms)
-            defaults write -g KeyRepeat -int 1          # Normal min: 2 (30ms)
-            defaults write -g ApplePressAndHoldEnabled -bool false
+            defaults write -g InitialKeyRepeat -int "$MACOS_INITIAL_KEY_REPEAT"
+            defaults write -g KeyRepeat -int "$MACOS_KEY_REPEAT"
+            defaults write -g ApplePressAndHoldEnabled -bool "$MACOS_PRESS_AND_HOLD"
             success "Keyboard configured (may require logout)"
         fi
     fi
