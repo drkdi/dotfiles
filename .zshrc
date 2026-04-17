@@ -5,28 +5,23 @@
 #
 # CHANGES MADE (2026-02-04):
 # --------------------------
-# 1. CHANGED: Switched from Pure prompt to Starship (~10ms faster)
-#    To revert: comment out Starship line, uncomment Pure lines below
+# 1. REMOVED: 'type rg' runtime check - assumes rg is installed
 #
-# 2. REMOVED: 'type rg' runtime check - assumes rg is installed
+# 2. CHANGED: FZF preview uses 'bat' with syntax highlighting
 #
-# 3. CHANGED: FZF preview uses 'bat' with syntax highlighting
+# 3. REMOVED: Dead Oh-My-Zsh code, graveyard comments, duplicate definitions
 #
-# 4. REMOVED: Dead Oh-My-Zsh code, graveyard comments, duplicate definitions
+# 4. CHANGED: 'go' alias -> function (was running git status at startup)
 #
-# 5. CHANGED: 'go' alias -> function (was running git status at startup)
+# 5. CHANGED: 'kill' -> 'killport', 'reset' -> 'greset' (shadowed builtins)
 #
-# 6. CHANGED: 'kill' -> 'killport', 'reset' -> 'greset' (shadowed builtins)
+# 6. CHANGED: compinit -C (skips compaudit security check)
 #
-# 7. CHANGED: compinit -C (skips compaudit security check)
+# 7. MOVED: Work aliases/functions to ~/.zshrc.local
 #
-# 8. MOVED: Work aliases/functions to ~/.zshrc.local
+# 8. ADDED: Modern CLI aliases (eza, fd, bat, lazygit)
 #
-# 9. ADDED: Modern CLI aliases (eza, fd, bat, lazygit)
-#
-# 10. ADDED: zsh-syntax-highlighting for command coloring
-#
-# 11. CREATED: ~/.config/starship.toml for prompt customization
+# 9. ADDED: zsh-syntax-highlighting for command coloring
 #
 # PROFILING: Uncomment to measure startup time:
 #   zmodload zsh/zprof  (at top)
@@ -41,14 +36,10 @@
 # Completion paths (before compinit)
 fpath+=/opt/homebrew/share/zsh/site-functions
 fpath+=$HOME/.zsh/pure
-fpath=(/Users/derek.dai/.docker/completions $fpath)
 
-# Starship prompt (faster than Pure)
-eval "$(starship init zsh)"
-
-# REVERTED Pure prompt - uncomment if Starship doesn't work:
-# autoload -U promptinit; promptinit
-# prompt pure
+# Pure prompt
+autoload -U promptinit; promptinit
+prompt pure
 
 # Optimized compinit: skip compaudit (-C flag)
 autoload -Uz compinit
@@ -64,37 +55,53 @@ export PAGER="less -S"
 export PSQL_PAGER="less -S"
 export PATH="$HOME/.local/bin:$PATH"
 
+# Keep terminal/tmux titles stable; do not auto-update from shell prompt
+export DISABLE_AUTO_TITLE="true"
+
 # ============================================================================
 # KEY BINDINGS
 # ============================================================================
 
-bindkey -v                              # Vi mode
-bindkey "^[[1;3C" forward-word          # Alt+Right
-bindkey "^[[1;3D" backward-word         # Alt+Left
-bindkey '^R' history-incremental-search-backward  # Ctrl+R for history
+if [[ -o interactive ]]; then
+    bindkey -v                              # Vi mode
+    bindkey "^[[1;3C" forward-word          # Alt+Right
+    bindkey "^[[1;3D" backward-word         # Alt+Left
+    bindkey '^R' history-incremental-search-backward  # Ctrl+R for history
+fi
 
 # ============================================================================
 # FZF
 # ============================================================================
 
-[[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh
+# FZF shell integration (Homebrew)
+if [[ -o interactive ]]; then
+    [[ -f /opt/homebrew/opt/fzf/shell/completion.zsh ]] && source /opt/homebrew/opt/fzf/shell/completion.zsh
+    [[ -f /opt/homebrew/opt/fzf/shell/key-bindings.zsh ]] && source /opt/homebrew/opt/fzf/shell/key-bindings.zsh
+fi
 
 export FZF_DEFAULT_COMMAND='rg --files --hidden --follow --no-ignore-vcs -g "!{node_modules,.git}"'
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 export FZF_ALT_C_COMMAND='fd --type d --hidden --follow --exclude .git'
-export FZF_DEFAULT_OPTS='--height 96% --reverse --preview "bat --color=always --style=numbers --line-range=:500 {} 2>/dev/null || cat {}" --bind tab:up,shift-tab:down'
+export FZF_DEFAULT_OPTS='--height 96% --reverse --preview "bat --color=always --style=numbers --line-range=:500 {} 2>/dev/null || cat {}"'
 
 # ============================================================================
 # ZSH PLUGINS
 # ============================================================================
 
-# Syntax highlighting (install: brew install zsh-syntax-highlighting)
-[[ -f /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] && \
-    source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+# Syntax highlighting + autosuggestions only in interactive shells.
+if [[ -o interactive ]]; then
+    [[ -f /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] && \
+        source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+    [[ -f /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]] && \
+        source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+fi
 
-# Autosuggestions (install: brew install zsh-autosuggestions)
-[[ -f /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]] && \
-    source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+# Keep Tab for completion; use Shift+Tab to accept autosuggestions.
+if [[ -o interactive ]]; then
+    ZSH_AUTOSUGGEST_ACCEPT_WIDGETS+=(end-of-line)
+    bindkey '^I' expand-or-complete
+    bindkey '^[[Z' autosuggest-accept
+fi
 
 # ============================================================================
 # ALIASES - Navigation
@@ -175,14 +182,13 @@ alias ze='nvim $HOME/.zshrc'
 alias te='nvim $HOME/.tmux.conf'
 alias ae='nvim $HOME/.config/alacritty/alacritty.toml'
 alias ge='nvim $HOME/.gitconfig'
-alias se='nvim $HOME/.config/starship.toml'
 alias vf='nvim "$(fzf)"'
 
 alias t='tmux'
 alias tmux='TERM=screen-256color tmux'
 alias mux='tmuxinator'
 
-alias c='code'
+alias c='codex --yolo'
 alias r='ranger'
 alias ctags='/opt/homebrew/bin/ctags'
 alias tags='ctags -R --exclude=node_modules --exclude=public --exclude=vendor --exclude=db --exclude=tmp'
@@ -303,3 +309,40 @@ extract() {
 for env_file in "$HOME"/.config/*/env; do
     [[ -f "$env_file" ]] && source "$env_file"
 done
+
+# ============================================================================
+# DISPLAY MODE SYNC
+# ============================================================================
+
+display_mode_current() {
+    if ioreg -r -k AppleClamshellState -d 4 | grep -q '"AppleClamshellState" = Yes'; then
+        echo clamshell
+    else
+        echo laptop
+    fi
+}
+
+display_mode_sync() {
+    [[ ! -o interactive ]] && return
+    [[ -n "$SSH_CONNECTION" ]] && return
+
+    local current last_file last_mode display_mode_cmd
+    current="$(display_mode_current)"
+    last_file="${XDG_CACHE_HOME:-$HOME/.cache}/display-mode.last"
+    [[ -f "$last_file" ]] && last_mode="$(<"$last_file")" || last_mode=""
+    if [[ -x "$HOME/display-mode" ]]; then
+        display_mode_cmd="$HOME/display-mode"
+    elif command -v display-mode >/dev/null 2>&1; then
+        display_mode_cmd="$(command -v display-mode)"
+    else
+        display_mode_cmd=""
+    fi
+
+    if [[ "$current" != "$last_mode" ]] && [[ -n "$display_mode_cmd" ]]; then
+        "$display_mode_cmd" "$current" >/dev/null 2>&1
+        mkdir -p "${last_file:h}"
+        print -r -- "$current" > "$last_file"
+    fi
+}
+
+display_mode_sync

@@ -1,0 +1,288 @@
+#!/bin/zsh
+set -euo pipefail
+
+apply_mode="live"
+mode="auto"
+
+while (( $# > 0 )); do
+    case "$1" in
+        --live)
+            apply_mode="live"
+            ;;
+        --background)
+            apply_mode="background"
+            ;;
+        auto|laptop|clamshell)
+            mode="$1"
+            ;;
+        *)
+            echo "usage: $(basename "$0") [--live|--background] [auto|laptop|clamshell]" >&2
+            exit 1
+            ;;
+    esac
+    shift
+done
+
+case "$mode" in
+    auto)
+        if ioreg -r -k AppleClamshellState -d 4 | grep -q '"AppleClamshellState" = Yes'; then
+            mode="clamshell"
+        else
+            mode="laptop"
+        fi
+        ;;
+    laptop|clamshell)
+        ;;
+esac
+
+readonly VSCODE_SETTINGS="$HOME/Library/Application Support/Code/User/settings.json"
+readonly ALACRITTY_CONFIG="$HOME/.config/alacritty/alacritty.toml"
+readonly SLACK_PREFERENCES="$HOME/Library/Application Support/Slack/Preferences"
+readonly SLACK_ROOT_STATE="$HOME/Library/Application Support/Slack/storage/root-state.json"
+readonly CODEX_PREFERENCES="$HOME/Library/Application Support/Codex/Preferences"
+readonly SPOTIFY_USERS_DIR="$HOME/Library/Application Support/Spotify/Users"
+
+# Current values on this machine are the laptop defaults.
+readonly LAPTOP_VSCODE_ZOOM="0"
+readonly LAPTOP_ALACRITTY_SIZE="17.5"
+readonly LAPTOP_SLACK_ZOOM="-1"
+readonly LAPTOP_CODEX_ZOOM="-2"
+readonly LAPTOP_SPOTIFY_ZOOM="-1"
+
+# Clamshell defaults derived from the saved laptop baselines.
+readonly CLAMSHELL_VSCODE_ZOOM="1"
+readonly CLAMSHELL_ALACRITTY_SIZE="13.0"
+readonly CLAMSHELL_SLACK_ZOOM="0"
+readonly CLAMSHELL_CODEX_ZOOM="-5"
+readonly CLAMSHELL_SPOTIFY_ZOOM="-1"
+
+warn() {
+    echo "display-mode: $*" >&2
+}
+
+set_vscode_zoom_setting() {
+    local zoom="$1"
+
+    [[ -f "$VSCODE_SETTINGS" ]] || return 0
+
+    python3 - "$VSCODE_SETTINGS" "$zoom" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+zoom = float(sys.argv[2])
+data = json.loads(path.read_text())
+data["window.zoomLevel"] = zoom
+data["window.zoomPerWindow"] = False
+path.write_text(json.dumps(data, separators=(",", ":")))
+PY
+}
+
+set_alacritty_size() {
+    local size="$1"
+
+    [[ -f "$ALACRITTY_CONFIG" ]] || return 0
+
+    ALACRITTY_SIZE="$size" perl -0pi -e \
+        's/(\[font\]\s*\Rsize = )[0-9.]+/$1 . $ENV{ALACRITTY_SIZE}/se' \
+        "$ALACRITTY_CONFIG"
+}
+
+set_json_value() {
+    local file="$1"
+    local program="$2"
+
+    [[ -f "$file" ]] || return 0
+
+    python3 - "$file" "$program" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+program = sys.argv[2]
+
+data = json.loads(path.read_text())
+ns = {"data": data}
+exec(program, ns)
+path.write_text(json.dumps(data, separators=(",", ":")))
+PY
+}
+
+set_slack_zoom_setting() {
+    local zoom="$1"
+
+    set_json_value "$SLACK_PREFERENCES" "
+settings = data.setdefault('settings', {})
+settings['zoomLevel'] = int($zoom)
+user_choices = settings.setdefault('userChoices', {})
+user_choices['zoomLevel'] = int($zoom)
+partition = data.setdefault('partition', {})
+levels = partition.setdefault('per_host_zoom_levels', {})
+for host_bucket in levels.values():
+    if isinstance(host_bucket, dict) and 'app.slack.com' in host_bucket:
+        host_bucket['app.slack.com'] = float($zoom)
+"
+
+    set_json_value "$SLACK_ROOT_STATE" "
+settings = data.setdefault('settings', {})
+settings['zoomLevel'] = int($zoom)
+user_choices = settings.setdefault('userChoices', {})
+user_choices['zoomLevel'] = int($zoom)
+"
+}
+
+set_codex_zoom_setting() {
+    local zoom="$1"
+
+    set_json_value "$CODEX_PREFERENCES" "
+partition = data.setdefault('partition', {})
+levels = partition.setdefault('per_host_zoom_levels', {})
+for host_bucket in levels.values():
+    if isinstance(host_bucket, dict):
+        for key in list(host_bucket.keys()):
+            host_bucket[key] = float($zoom)
+"
+}
+
+spotify_prefs_file() {
+    local file
+    for file in "$SPOTIFY_USERS_DIR"/*/prefs; do
+        [[ -f "$file" ]] && {
+            echo "$file"
+            return 0
+        }
+    done
+    return 1
+}
+
+set_spotify_zoom_setting() {
+    local zoom="$1"
+    local prefs_file
+
+    prefs_file="$(spotify_prefs_file)" || return 0
+
+    python3 - "$prefs_file" "$zoom" <<'PY'
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+zoom = int(sys.argv[2])
+target = zoom * 50
+
+lines = path.read_text().splitlines()
+kept = [line for line in lines if not line.startswith("app.browser.zoom-level=")]
+if target != 0:
+    kept.append(f"app.browser.zoom-level={target}")
+path.write_text("\n".join(kept) + ("\n" if kept else ""))
+PY
+}
+
+app_is_running() {
+    local process_name="$1"
+    pgrep -qx "$process_name" >/dev/null 2>&1
+}
+
+set_app_zoom_live() {
+    local app_name="$1"
+    local process_name="$2"
+    local level="$3"
+    local repeats key mods
+
+    app_is_running "$process_name" || return 0
+
+    if (( level >= 0 )); then
+        repeats="$level"
+        key="="
+        mods="{command down, shift down}"
+    else
+        repeats=$(( -level ))
+        key="-"
+        mods="{command down}"
+    fi
+
+    osascript <<OSA >/dev/null 2>&1 || {
+tell application "$app_name" to activate
+delay 0.15
+tell application "System Events"
+    keystroke "0" using command down
+    delay 0.05
+    repeat $repeats times
+        keystroke "$key" using $mods
+        delay 0.05
+    end repeat
+end tell
+OSA
+        warn "could not adjust $app_name live; grant Accessibility access to your terminal app"
+    }
+}
+
+set_app_zoom_live_via_menu() {
+    local app_name="$1"
+    local process_name="$2"
+    local level="$3"
+    local menu_item repeats
+
+    app_is_running "$process_name" || return 0
+
+    if (( level >= 0 )); then
+        repeats="$level"
+        menu_item="Zoom In"
+    else
+        repeats=$(( -level ))
+        menu_item="Zoom Out"
+    fi
+
+    osascript <<OSA >/dev/null 2>&1 || {
+tell application "$app_name" to activate
+delay 0.15
+tell application "System Events"
+    tell process "$process_name"
+        click menu item "Actual Size" of menu 1 of menu bar item "View" of menu bar 1
+        delay 0.05
+        repeat $repeats times
+            click menu item "$menu_item" of menu 1 of menu bar item "View" of menu bar 1
+            delay 0.05
+        end repeat
+    end tell
+end tell
+OSA
+        warn "could not adjust $app_name live via menu"
+    }
+}
+
+case "$mode" in
+    laptop)
+        vscode_zoom="$LAPTOP_VSCODE_ZOOM"
+        alacritty_size="$LAPTOP_ALACRITTY_SIZE"
+        slack_zoom="$LAPTOP_SLACK_ZOOM"
+        codex_zoom="$LAPTOP_CODEX_ZOOM"
+        spotify_zoom="$LAPTOP_SPOTIFY_ZOOM"
+        ;;
+    clamshell)
+        vscode_zoom="$CLAMSHELL_VSCODE_ZOOM"
+        alacritty_size="$CLAMSHELL_ALACRITTY_SIZE"
+        slack_zoom="$CLAMSHELL_SLACK_ZOOM"
+        codex_zoom="$CLAMSHELL_CODEX_ZOOM"
+        spotify_zoom="$CLAMSHELL_SPOTIFY_ZOOM"
+        ;;
+esac
+
+set_alacritty_size "$alacritty_size"
+
+if [[ "$apply_mode" == "live" ]]; then
+    set_app_zoom_live "Slack" "Slack" "$slack_zoom"
+    set_app_zoom_live_via_menu "Codex" "Codex" "$codex_zoom"
+    set_app_zoom_live "Visual Studio Code" "Code" "$vscode_zoom"
+    set_app_zoom_live_via_menu "Spotify" "Spotify" "$spotify_zoom"
+fi
+
+# Persist after live UI actions so apps that rewrite their own settings do not
+# immediately erase the target values from disk.
+set_vscode_zoom_setting "$vscode_zoom"
+set_slack_zoom_setting "$slack_zoom"
+set_codex_zoom_setting "$codex_zoom"
+set_spotify_zoom_setting "$spotify_zoom"
+
+echo "$mode"
