@@ -5,13 +5,13 @@
 # Docs: https://alacritty.org/config-alacritty.html
 #
 # KEYBINDINGS SUMMARY:
-#   Cmd+H/J/K/L      = Vim-style pane navigation (sends C-h/j/k/l)
-#   Cmd+Shift+H      = tmux horizontal split (C-b ")
-#   Cmd+Shift+L      = tmux vertical split (C-b %)
+#   Cmd+Opt+H/J/K/L  = Vim-style pane navigation (sends C-h/j/k/l)
+#   Cmd+Shift+H/L    = tmux first/last window by index (C-b H/L)
 #   Cmd+Shift+J/K    = tmux prev/next window (C-b p/n)
 #   Cmd+Shift+X      = tmux kill pane (C-b x)
 #   Cmd+D            = Send C-d (EOF/exit)
-#   Cmd+C            = tmux new window (C-b c)
+#   Cmd+C            = Copy selection
+#   Cmd+T            = tmux new window (C-b c)
 #   Cmd+S            = Vim save (:w)
 #   Option+Space     = Toggle vi mode
 #
@@ -29,24 +29,24 @@ TERM = "xterm-256color"
 
 [window]
 decorations = "None"
-opacity = 0.85
-dynamic_title = true
-dynamic_padding = true
+opacity = 0.90
+dynamic_title = false
+dynamic_padding = false
 
 [window.dimensions]
-columns = 120
-lines = 36
+columns = 220
+lines = 48
 
 [window.padding]
-x = 8
-y = 8
+x = 0
+y = 0
 
 # ============================================================================
 # FONT
 # ============================================================================
 
 [font]
-size = 17.5
+size = 13.0
 
 [font.normal]
 family = "DankMono Nerd Font Mono"
@@ -81,7 +81,7 @@ blinking = "Always"
 
 [scrolling]
 history = 10000
-multiplier = 5
+multiplier = 50
 
 # ============================================================================
 # MOUSE
@@ -96,6 +96,7 @@ hide_when_typing = true
 
 [selection]
 semantic_escape_chars = ",│`|:\"' ()[]{}<>\t"
+save_to_clipboard = true
 
 # ============================================================================
 # HINTS (clickable URLs: Cmd+click or Shift+click; Shift passes through tmux)
@@ -121,6 +122,7 @@ regex = "(ipfs:|ipns:|magnet:|mailto:|gemini://|gopher://|https://|http://|news:
 
 [colors]
 draw_bold_text_with_bright_colors = true
+transparent_background_colors = false
 
 [colors.primary]
 background = "#24273A"
@@ -190,10 +192,10 @@ white = "#B8C0E0"
 # KEYBOARD BINDINGS
 # ============================================================================
 
-# Tmux window navigation
+# Tmux pane/window navigation
 [[keyboard.bindings]]
-chars = "\u0002n"  # C-b n (next window)
-key = "K"
+chars = "\u0002L"  # C-b L (last window index)
+key = "L"
 mods = "Command|Shift"
 
 [[keyboard.bindings]]
@@ -201,14 +203,13 @@ chars = "\u0002p"  # C-b p (previous window)
 key = "J"
 mods = "Command|Shift"
 
-# Tmux splits
 [[keyboard.bindings]]
-chars = "\u0002\u0025"  # C-b % (vertical split)
-key = "L"
+chars = "\u0002n"  # C-b n (next window)
+key = "K"
 mods = "Command|Shift"
 
 [[keyboard.bindings]]
-chars = "\u0002\""  # C-b " (horizontal split)
+chars = "\u0002H"  # C-b H (first window index)
 key = "H"
 mods = "Command|Shift"
 
@@ -222,22 +223,22 @@ mods = "Command|Shift"
 [[keyboard.bindings]]
 chars = "\b"  # C-h
 key = "H"
-mods = "Command"
+mods = "Command|Option"
 
 [[keyboard.bindings]]
 chars = "\n"  # C-j
 key = "J"
-mods = "Command"
+mods = "Command|Option"
 
 [[keyboard.bindings]]
 chars = "\u000B"  # C-k
 key = "K"
-mods = "Command"
+mods = "Command|Option"
 
 [[keyboard.bindings]]
 chars = "\f"  # C-l
 key = "L"
-mods = "Command"
+mods = "Command|Option"
 
 # Other shortcuts
 [[keyboard.bindings]]
@@ -246,8 +247,14 @@ key = "D"
 mods = "Command"
 
 [[keyboard.bindings]]
-chars = "\u0002c"  # C-b c (new window)
+# Keep standard macOS copy behavior for terminal selections.
+action = "Copy"
 key = "C"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u0002c"  # C-b c (new window)
+key = "T"
 mods = "Command"
 
 [[keyboard.bindings]]
