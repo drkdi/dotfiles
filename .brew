@@ -51,7 +51,6 @@ eza # Better ls (replaces exa)
 fd # Better find
 watch # For periodic commands
 jq # JSON processor
-baobab # Disk usage / storage inspection CLI
 
 # --- Apps (casks - install with: brew install --cask <name>) ---
 

@@ -25,7 +25,7 @@
     editor = nvim
     excludesfile = ~/.gitignore_global
 	fsmonitor = true
-	untrackedcache = true
+	untrackedCache = true
 
 [init]
     defaultBranch = main
@@ -154,6 +154,13 @@
 
 [fetch]
     prune = true
-# [user] - Set per machine (not stored in repo):
-#   git config --global user.name "Your Name"
-#   git config --global user.email "you@example.com"
+[user]
+	name = Derek
+[feature]
+	manyFiles = true
+[credential "https://github.com"]
+	helper = 
+	helper = !/opt/homebrew/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper = 
+	helper = !/opt/homebrew/bin/gh auth git-credential

@@ -39,21 +39,22 @@ readonly VSCODE_SETTINGS="$HOME/Library/Application Support/Code/User/settings.j
 readonly ALACRITTY_CONFIG="$HOME/.config/alacritty/alacritty.toml"
 readonly SLACK_PREFERENCES="$HOME/Library/Application Support/Slack/Preferences"
 readonly SLACK_ROOT_STATE="$HOME/Library/Application Support/Slack/storage/root-state.json"
-readonly CODEX_PREFERENCES="$HOME/Library/Application Support/Codex/Preferences"
+# ChatGPT still stores these preferences under the legacy Codex directory.
+readonly CHATGPT_PREFERENCES="$HOME/Library/Application Support/Codex/Preferences"
 readonly SPOTIFY_USERS_DIR="$HOME/Library/Application Support/Spotify/Users"
 
 # Current values on this machine are the laptop defaults.
 readonly LAPTOP_VSCODE_ZOOM="0"
 readonly LAPTOP_ALACRITTY_SIZE="17.5"
 readonly LAPTOP_SLACK_ZOOM="-1"
-readonly LAPTOP_CODEX_ZOOM="-2"
+readonly LAPTOP_CHATGPT_ZOOM="-2"
 readonly LAPTOP_SPOTIFY_ZOOM="-1"
 
 # Clamshell defaults derived from the saved laptop baselines.
 readonly CLAMSHELL_VSCODE_ZOOM="1"
-readonly CLAMSHELL_ALACRITTY_SIZE="13.0"
+readonly CLAMSHELL_ALACRITTY_SIZE="17.5"
 readonly CLAMSHELL_SLACK_ZOOM="0"
-readonly CLAMSHELL_CODEX_ZOOM="-5"
+readonly CLAMSHELL_CHATGPT_ZOOM="1"
 readonly CLAMSHELL_SPOTIFY_ZOOM="-1"
 
 warn() {
@@ -133,16 +134,21 @@ user_choices['zoomLevel'] = int($zoom)
 "
 }
 
-set_codex_zoom_setting() {
+set_chatgpt_zoom_setting() {
     local zoom="$1"
 
-    set_json_value "$CODEX_PREFERENCES" "
+    set_json_value "$CHATGPT_PREFERENCES" "
 partition = data.setdefault('partition', {})
 levels = partition.setdefault('per_host_zoom_levels', {})
+if not levels:
+    levels['default'] = {'-': float($zoom)}
 for host_bucket in levels.values():
     if isinstance(host_bucket, dict):
-        for key in list(host_bucket.keys()):
-            host_bucket[key] = float($zoom)
+        if not host_bucket:
+            host_bucket['-'] = float($zoom)
+        else:
+            for key in list(host_bucket.keys()):
+                host_bucket[key] = float($zoom)
 "
 }
 
@@ -257,14 +263,14 @@ case "$mode" in
         vscode_zoom="$LAPTOP_VSCODE_ZOOM"
         alacritty_size="$LAPTOP_ALACRITTY_SIZE"
         slack_zoom="$LAPTOP_SLACK_ZOOM"
-        codex_zoom="$LAPTOP_CODEX_ZOOM"
+        chatgpt_zoom="$LAPTOP_CHATGPT_ZOOM"
         spotify_zoom="$LAPTOP_SPOTIFY_ZOOM"
         ;;
     clamshell)
         vscode_zoom="$CLAMSHELL_VSCODE_ZOOM"
         alacritty_size="$CLAMSHELL_ALACRITTY_SIZE"
         slack_zoom="$CLAMSHELL_SLACK_ZOOM"
-        codex_zoom="$CLAMSHELL_CODEX_ZOOM"
+        chatgpt_zoom="$CLAMSHELL_CHATGPT_ZOOM"
         spotify_zoom="$CLAMSHELL_SPOTIFY_ZOOM"
         ;;
 esac
@@ -273,7 +279,7 @@ set_alacritty_size "$alacritty_size"
 
 if [[ "$apply_mode" == "live" ]]; then
     set_app_zoom_live "Slack" "Slack" "$slack_zoom"
-    set_app_zoom_live_via_menu "Codex" "Codex" "$codex_zoom"
+    set_app_zoom_live_via_menu "ChatGPT" "ChatGPT" "$chatgpt_zoom"
     set_app_zoom_live "Visual Studio Code" "Code" "$vscode_zoom"
     set_app_zoom_live_via_menu "Spotify" "Spotify" "$spotify_zoom"
 fi
@@ -282,7 +288,7 @@ fi
 # immediately erase the target values from disk.
 set_vscode_zoom_setting "$vscode_zoom"
 set_slack_zoom_setting "$slack_zoom"
-set_codex_zoom_setting "$codex_zoom"
+set_chatgpt_zoom_setting "$chatgpt_zoom"
 set_spotify_zoom_setting "$spotify_zoom"
 
 echo "$mode"

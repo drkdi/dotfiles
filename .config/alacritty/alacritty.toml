@@ -46,7 +46,7 @@ y = 0
 # ============================================================================
 
 [font]
-size = 13.0
+size = 17.5
 
 [font.normal]
 family = "DankMono Nerd Font Mono"
@@ -81,7 +81,7 @@ blinking = "Always"
 
 [scrolling]
 history = 10000
-multiplier = 50
+multiplier = 3
 
 # ============================================================================
 # MOUSE
