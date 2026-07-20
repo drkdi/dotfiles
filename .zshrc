@@ -351,8 +351,7 @@ display_mode_sync
 if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init zsh)"; fi
 
 # Added by dbt installer
-export PATH="$PATH:/Users/derek.dai/.local/bin"
+export PATH="$PATH:$HOME/.local/bin"
 
 # dbt aliases
-alias dbtf=/Users/derek.dai/.local/bin/dbt
-
+alias dbtf="$HOME/.local/bin/dbt"

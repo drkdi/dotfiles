@@ -10,11 +10,11 @@
 
 zsh
 zsh-syntax-highlighting
-starship # Fast, customizable prompt (replaces pure)
+zsh-autosuggestions
+pure # Prompt used by .zshrc
 
 # --- Terminal ---
 
-alacritty
 tmux
 tmuxinator
 
@@ -66,5 +66,3 @@ spotify-tui # Spotify CLI (spt)
 # --- Optional (uncomment if needed) ---
 
 # redis
-
-# pure # Old prompt (replaced by starship)

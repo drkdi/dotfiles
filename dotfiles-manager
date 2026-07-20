@@ -29,7 +29,8 @@ readonly TMP_DIR="$HOME/tmp-files"
 readonly BACKUP_FILE="$HOME/Downloads/tmp-files.zip"
 readonly BACKUP_PERSONAL="$HOME/Downloads/tmp-files-PERSONAL.zip"
 readonly LOG_FILE="$HOME/.dotfiles-manager.log"
-readonly DOTFILES_REPO="$HOME/github/dotfiles"
+readonly SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+readonly DOTFILES_REPO="${DOTFILES_REPO:-$SCRIPT_DIR}"
 
 # macOS keyboard repeat defaults for new-machine setup.
 # These are faster than the normal System Settings minimums.
@@ -54,11 +55,14 @@ DOTFILES=(
     # Terminal multiplexer
     "$HOME/.tmux.conf:.tmux.conf"
     
-    # Git
-    "$HOME/.gitconfig:.gitconfig"
-    
     # Package list
     "$HOME/.brew:.brew"
+)
+
+# Safe templates restored from the repository but never copied back during sync.
+# This prevents machine-local identity and credential settings from entering Git.
+REPO_ONLY_FILES=(
+    "$HOME/.gitconfig:.gitconfig"
 )
 
 # Nested config files
@@ -80,12 +84,11 @@ DOTFILE_DIRS=(
 
 # Personal files (--personal flag, not synced to public git)
 PERSONAL_FILES=(
-    # BetterTouchTool license/preset
-    "$HOME/Derek.bettertouchtool:Derek.bettertouchtool"
-    
-    # Fonts
-    "$HOME/DankMono-Italic-Nerd-Font-Mono.otf:DankMono-Italic-Nerd-Font-Mono.otf"
-    "$HOME/DankMono-Regular-Nerd-Font-Mono.otf:DankMono-Regular-Nerd-Font-Mono.otf"
+    # Licensed fonts are included only in the private backup archive.
+    "$HOME/Library/Fonts/DankMono-Italic-Nerd-Font-Mono.otf:DankMono-Italic-Nerd-Font-Mono.otf"
+    "$HOME/Library/Fonts/DankMono-Regular-Nerd-Font-Mono.otf:DankMono-Regular-Nerd-Font-Mono.otf"
+    "$HOME/Library/Fonts/DankMono-Italic.otf:DankMono-Italic.otf"
+    "$HOME/Library/Fonts/DankMono-Regular.otf:DankMono-Regular.otf"
 )
 
 PERSONAL_DIRS=(
@@ -97,12 +100,12 @@ PERSONAL_DIRS=(
 # Based on your actual .brew file + recommended additions
 BREW_ESSENTIAL=(
     # Terminal & Shell
-    "alacritty"
     "tmux"
     "tmuxinator"
     "zsh"
     "zsh-syntax-highlighting"
-    "starship"
+    "zsh-autosuggestions"
+    "pure"
     
     # Editors
     "vim"
@@ -125,12 +128,14 @@ BREW_ESSENTIAL=(
     "htop"             # Process viewer
     "gnu-sed"          # GNU sed for consistency
     
-    # Apps
-    "bettertouchtool"
-    
     # Fun
     "cmatrix"
     "spotify-tui"
+)
+
+BREW_CASKS=(
+    "alacritty"
+    "bettertouchtool"
 )
 
 # ============================================================================
@@ -383,12 +388,19 @@ backup_dotfiles() {
     # Handle BTT presets
     if ! $DRY_RUN; then
         info "Processing BetterTouchTool presets..."
-        if ls "$HOME"/Downloads/*.bttpreset 1> /dev/null 2>&1; then
-            # Keep only most recent
-            ls -t "$HOME"/Downloads/*.bttpreset 2>/dev/null | tail -n +2 | xargs rm -f 2>/dev/null || true
-            # Copy with date
-            find "$HOME/Downloads" -maxdepth 1 -type f -name "*.bttpreset" -exec cp "{}" "$TMP_DIR/$(date +"%m-%d-%y").bttpreset" \; 2>/dev/null || true
+        local latest_btt=""
+        local preset
+        for preset in "$HOME"/Downloads/*.bttpreset; do
+            [[ -e "$preset" ]] || continue
+            if [[ -z "$latest_btt" || "$preset" -nt "$latest_btt" ]]; then
+                latest_btt="$preset"
+            fi
+        done
+        if [[ -n "$latest_btt" ]]; then
+            cp "$latest_btt" "$TMP_DIR/$(date +"%m-%d-%y").bttpreset"
             success "Processed BTT presets"
+        else
+            info "No BTT preset found in Downloads"
         fi
     fi
     
@@ -427,6 +439,35 @@ backup_dotfiles() {
 # ============================================================================
 # Restore Functions
 # ============================================================================
+
+restore_from_repo() {
+    header "Restoring dotfiles from repository"
+
+    if [[ ! -d "$DOTFILES_REPO" ]]; then
+        error "Dotfiles repository not found: $DOTFILES_REPO"
+        return 1
+    fi
+
+    local pair src dest_rel repo_src
+    for pair in "${DOTFILES[@]}" "${DOTFILE_DIRS[@]}" "${REPO_ONLY_FILES[@]}"; do
+        src=$(get_src "$pair")
+        dest_rel=$(get_dest "$pair")
+        repo_src="$DOTFILES_REPO/$dest_rel"
+        safe_copy "$repo_src" "$src" || true
+    done
+
+    success "Restored managed files from repository"
+}
+
+restore_repo_only_files() {
+    local pair src dest_rel repo_src
+    for pair in "${REPO_ONLY_FILES[@]}"; do
+        src=$(get_src "$pair")
+        dest_rel=$(get_dest "$pair")
+        repo_src="$DOTFILES_REPO/$dest_rel"
+        safe_copy "$repo_src" "$src" || true
+    done
+}
 
 restore_dotfiles() {
     local use_personal="${1:-false}"
@@ -505,14 +546,12 @@ setup_new_machine() {
     # Show what will be done
     info "This will:"
     echo "  1. Install Homebrew (if not installed)"
-    echo "  2. Install Oh My Zsh (if not installed)"
-    echo "  3. Install essential packages via Homebrew"
-    echo "  4. Configure keyboard settings (fast repeat)"
-    echo "  5. Install fonts"
-    echo "  6. Install BetterTouchTool preset"
-    echo "  7. Restore dotfiles from backup"
-    echo "  8. Bootstrap Neovim plugins (lazy.nvim)"
-    echo "  9. Optimize Git (fsmonitor + untracked cache)"
+    echo "  2. Install essential packages and apps via Homebrew"
+    echo "  3. Configure keyboard settings (fast repeat)"
+    echo "  4. Restore dotfiles from the repository or backup"
+    echo "  5. Install fonts and the BetterTouchTool preset"
+    echo "  6. Bootstrap Neovim and tmux plugins"
+    echo "  7. Configure Git identity and performance"
     echo
     
     if ! confirm "Proceed with setup?" "y"; then
@@ -539,37 +578,33 @@ setup_new_machine() {
         fi
     fi
     
-    # 2. Oh My Zsh
-    header "Installing Oh My Zsh"
-    if [[ -d "$HOME/.oh-my-zsh" ]]; then
-        success "Oh My Zsh already installed"
-    else
-        if $DRY_RUN; then
-            step "[dry-run] Would install Oh My Zsh"
-        else
-            info "Installing Oh My Zsh..."
-            RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-            success "Oh My Zsh installed"
-        fi
-    fi
-    
-    # 3. Brew packages
+    # 2. Brew packages and casks
     header "Installing packages"
     if $DRY_RUN; then
         step "[dry-run] Would install: ${BREW_ESSENTIAL[*]}"
+        step "[dry-run] Would install casks: ${BREW_CASKS[*]}"
     else
-        # Load from .brew file if exists
+        local brew_file=""
         if [[ -f "$HOME/.brew" ]]; then
-            info "Installing packages from ~/.brew..."
-            while IFS= read -r pkg || [[ -n "$pkg" ]]; do
-                [[ -z "$pkg" || "$pkg" =~ ^# ]] && continue
+            brew_file="$HOME/.brew"
+        elif [[ -f "$DOTFILES_REPO/.brew" ]]; then
+            brew_file="$DOTFILES_REPO/.brew"
+        fi
+
+        if [[ -n "$brew_file" ]]; then
+            info "Installing packages from $brew_file..."
+            while IFS= read -r line || [[ -n "$line" ]]; do
+                local pkg="${line%%#*}"
+                pkg="${pkg#"${pkg%%[![:space:]]*}"}"
+                pkg="${pkg%"${pkg##*[![:space:]]}"}"
+                [[ -z "$pkg" ]] && continue
                 if brew list "$pkg" &>/dev/null; then
                     step "$pkg (already installed)"
                 else
                     step "Installing $pkg..."
                     brew install "$pkg" 2>/dev/null || warn "Failed to install $pkg"
                 fi
-            done < "$HOME/.brew"
+            done < "$brew_file"
         else
             info "Installing essential packages..."
             for pkg in "${BREW_ESSENTIAL[@]}"; do
@@ -581,10 +616,19 @@ setup_new_machine() {
                 fi
             done
         fi
+
+        for cask in "${BREW_CASKS[@]}"; do
+            if brew list --cask "$cask" &>/dev/null; then
+                step "$cask (already installed)"
+            else
+                step "Installing cask $cask..."
+                brew install --cask "$cask" 2>/dev/null || warn "Failed to install cask $cask"
+            fi
+        done
         success "Packages installed"
     fi
     
-    # 4. Keyboard settings (macOS)
+    # 3. Keyboard settings (macOS)
     if is_macos; then
         header "Configuring keyboard"
         if $DRY_RUN; then
@@ -598,6 +642,18 @@ setup_new_machine() {
         fi
     fi
     
+    # 4. Restore dotfiles before bootstrapping dependent tools
+    header "Restoring dotfiles"
+    if [[ -f "$BACKUP_PERSONAL" ]]; then
+        restore_dotfiles true true
+        restore_repo_only_files
+    elif [[ -f "$BACKUP_FILE" ]]; then
+        restore_dotfiles false true
+        restore_repo_only_files
+    else
+        restore_from_repo
+    fi
+
     # 5. Fonts
     header "Installing fonts"
     if ls "$HOME"/*.otf 1> /dev/null 2>&1 || ls "$HOME"/*.ttf 1> /dev/null 2>&1; then
@@ -615,29 +671,28 @@ setup_new_machine() {
         info "No font files found in home directory"
     fi
     
-    # 6. BetterTouchTool
+    # 5. BetterTouchTool
     header "Installing BetterTouchTool preset"
-    if ls "$HOME"/*.bttpreset 1> /dev/null 2>&1; then
+    local btt_preset=""
+    local candidate
+    for candidate in "$HOME"/*.bttpreset "$DOTFILES_REPO"/*.bttpreset; do
+        [[ -e "$candidate" ]] || continue
+        if [[ -z "$btt_preset" || "$candidate" -nt "$btt_preset" ]]; then
+            btt_preset="$candidate"
+        fi
+    done
+    if [[ -n "$btt_preset" ]]; then
         if $DRY_RUN; then
-            step "[dry-run] Would install BTT preset"
+            step "[dry-run] Would open BTT preset: $btt_preset"
         else
-            ls -t "$HOME"/*.bttpreset 2>/dev/null | head -1 | xargs open
+            open "$btt_preset"
             success "BTT preset opened"
         fi
     else
         info "No BTT preset found"
     fi
-    
-    # 7. Restore dotfiles
-    header "Restoring dotfiles"
-    if [[ -f "$BACKUP_FILE" ]]; then
-        restore_dotfiles false true
-    else
-        warn "No backup file found at $BACKUP_FILE"
-        info "Run 'dotfiles-manager backup' first on your source machine"
-    fi
-    
-    # 8. Bootstrap Neovim plugins
+
+    # 6. Bootstrap Neovim plugins
     header "Bootstrapping Neovim"
     if command_exists nvim; then
         if $DRY_RUN; then
@@ -651,8 +706,19 @@ setup_new_machine() {
     else
         warn "Neovim not found — skipping plugin bootstrap"
     fi
+
+    header "Bootstrapping tmux plugins"
+    if [[ -d "$HOME/.tmux/plugins/tpm" ]]; then
+        success "tmux plugin manager already installed"
+    elif $DRY_RUN; then
+        step "[dry-run] Would clone tmux plugin manager to $HOME/.tmux/plugins/tpm"
+    else
+        git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm" && \
+            success "tmux plugin manager installed" || \
+            warn "tmux plugin manager installation failed"
+    fi
     
-    # 9. Git identity (not stored in repo)
+    # 7. Git identity (not stored in repo)
     header "Configuring Git identity"
     if $DRY_RUN; then
         step "[dry-run] Would prompt for git user.name and user.email"
@@ -678,7 +744,7 @@ setup_new_machine() {
         fi
     fi
 
-    # 10. Git performance (fsmonitor + untracked cache)
+    # 7. Git performance (fsmonitor + untracked cache)
     header "Optimizing Git performance"
     if $DRY_RUN; then
         step "[dry-run] Would enable core.fsmonitor and core.untrackedcache globally"
@@ -706,22 +772,36 @@ setup_new_machine() {
 
 sync_to_git() {
     header "Syncing to git repository"
-    
-    local dotfiles_dir=""
-    
-    # Find dotfiles directory
-    for dir in $(find "$HOME/Desktop" -maxdepth 2 -type d -name "dotfiles" 2>/dev/null); do
-        dotfiles_dir="$dir"
-        break
-    done
-    
-    if [[ -z "$dotfiles_dir" ]]; then
-        dotfiles_dir="$DOTFILES_REPO"
-    fi
+
+    local dotfiles_dir="$DOTFILES_REPO"
     
     if [[ ! -d "$dotfiles_dir" ]]; then
         error "Dotfiles repository not found"
         info "Expected at: $dotfiles_dir"
+        return 1
+    fi
+
+    local current_branch
+    current_branch=$(git -C "$dotfiles_dir" branch --show-current 2>/dev/null || true)
+    if [[ "$current_branch" != "main" ]]; then
+        error "Sync must run from the main branch (current: ${current_branch:-detached HEAD})"
+        info "Switch to main and update it before syncing"
+        return 1
+    fi
+
+    if [[ -n "$(git -C "$dotfiles_dir" status --porcelain)" ]]; then
+        error "Dotfiles repository has uncommitted changes"
+        info "Commit, stash, or discard them before syncing"
+        return 1
+    fi
+
+    if ! git -C "$dotfiles_dir" fetch origin main; then
+        error "Could not fetch origin/main"
+        return 1
+    fi
+    if ! git -C "$dotfiles_dir" merge-base --is-ancestor origin/main main; then
+        error "Local main is behind or diverged from origin/main"
+        info "Update main before syncing"
         return 1
     fi
     
@@ -740,7 +820,13 @@ sync_to_git() {
         
         # Git operations
         cd "$dotfiles_dir"
-        git add .
+        local pair dest_rel
+        for pair in "${DOTFILES[@]}" "${DOTFILE_DIRS[@]}" "${REPO_ONLY_FILES[@]}"; do
+            dest_rel=$(get_dest "$pair")
+            git add -- "$dest_rel"
+        done
+        git add -- dotfiles-manager .gitignore cvim
+        git add -A -- ':(glob)*.bttpreset'
         
         if git diff --cached --quiet; then
             info "No changes to commit"
@@ -749,7 +835,7 @@ sync_to_git() {
             git commit -m "$commit_msg"
             
             if confirm "Push to remote?"; then
-                git push
+                git push origin main
                 success "Pushed to remote"
                 
                 # Open in browser
@@ -841,7 +927,19 @@ list_managed() {
             echo -e "  ${RED}✗${RESET} $src ${DIM}(not found)${RESET}"
         fi
     done
-    
+
+    echo
+    echo -e "${BOLD}Repository-only templates:${RESET}"
+    for pair in "${REPO_ONLY_FILES[@]}"; do
+        local repo_file
+        repo_file="$DOTFILES_REPO/$(get_dest "$pair")"
+        if [[ -f "$repo_file" ]]; then
+            echo -e "  ${GREEN}✓${RESET} $repo_file"
+        else
+            echo -e "  ${RED}✗${RESET} $repo_file ${DIM}(not found)${RESET}"
+        fi
+    done
+
     echo
     echo -e "${BOLD}Personal files (--personal):${RESET}"
     for pair in "${PERSONAL_FILES[@]}"; do
@@ -889,6 +987,11 @@ ${BOLD}EXAMPLES:${RESET}
     $SCRIPT_NAME restore --force    # Restore without prompts
     $SCRIPT_NAME setup              # Setup new machine
     $SCRIPT_NAME sync               # Sync to git repo
+
+${BOLD}NEW MAC:${RESET}
+    git clone https://github.com/drkdi/dotfiles.git
+    cd dotfiles
+    ./dotfiles-manager setup
 
 ${BOLD}FILES:${RESET}
     Backup:   $BACKUP_FILE
@@ -1016,4 +1119,6 @@ main() {
     fi
 }
 
-main "$@"
+if [[ "${DOTFILES_MANAGER_SOURCE_ONLY:-false}" != "true" ]]; then
+    main "$@"
+fi
