@@ -188,7 +188,6 @@ alias t='tmux'
 alias tmux='TERM=screen-256color tmux'
 alias mux='tmuxinator'
 
-alias c='codex --yolo'
 alias r='ranger'
 alias ctags='/opt/homebrew/bin/ctags'
 alias tags='ctags -R --exclude=node_modules --exclude=public --exclude=vendor --exclude=db --exclude=tmp'
@@ -254,6 +253,7 @@ changed() {
     nvim -O $(git status --porcelain | awk '{print $2}')
 }
 
+
 # ============================================================================
 # FUNCTIONS - Utilities
 # ============================================================================
@@ -307,7 +307,8 @@ extract() {
 
 # Source any env files from ~/.config subdirectories
 for env_file in "$HOME"/.config/*/env; do
-    [[ -f "$env_file" ]] && source "$env_file"
+    [[ -f "$env_file" ]] || continue
+    source "$env_file"
 done
 
 # ============================================================================
@@ -346,3 +347,12 @@ display_mode_sync() {
 }
 
 display_mode_sync
+
+if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init zsh)"; fi
+
+# Added by dbt installer
+export PATH="$PATH:/Users/derek.dai/.local/bin"
+
+# dbt aliases
+alias dbtf=/Users/derek.dai/.local/bin/dbt
+

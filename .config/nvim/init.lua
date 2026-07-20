@@ -1,7 +1,7 @@
 -- ============================================================================
 -- NEOVIM LUA CONFIGURATION
 -- Migrated from VimScript (.vimrc) — 2026-02-10
--- Plugin Manager: lazy.nvim | LSP: Native | Theme: Catppuccin Mocha
+-- Plugin Manager: lazy.nvim | LSP: Native | Theme: Midnight
 --
 -- Original .vimrc kept as fallback for regular Vim.
 -- This file replaces ~/.config/nvim/init.vim (backed up to init.vim.bak).
@@ -30,11 +30,83 @@ vim.g.loaded_ruby_provider    = 0
 vim.g.loaded_perl_provider    = 0
 vim.g.loaded_node_provider    = 0
 
+-- ========================== NETRW (built-in file explorer) =================
+vim.g.netrw_preview = 1
+vim.g.netrw_banner = 0
+vim.g.netrw_liststyle = 3
+vim.g.netrw_browse_split = 0
+vim.g.netrw_winsize = 25
+vim.g.netrw_keepdir = 1
+
+local function netrw_tree_depth(line)
+  local prefix = line:match("^([| ]*)") or ""
+  return select(2, prefix:gsub("|", ""))
+end
+
+local function netrw_is_special_dir(line)
+  return line:match("^%s*%.%./%s*$") ~= nil or line:match("^%s*%./%s*$") ~= nil
+end
+
+local function netrw_is_expanded(lnum, depth)
+  if lnum >= vim.fn.line("$") then
+    return false
+  end
+  local next_line = vim.fn.getline(lnum + 1)
+  return netrw_tree_depth(next_line) > depth
+end
+
+local function netrw_expand_visible()
+  if vim.bo.filetype ~= "netrw" then
+    print("NetrwExpandVisible: current buffer is not netrw")
+    return
+  end
+
+  local view = vim.fn.winsaveview()
+  local expanded = 0
+  local open_key = vim.api.nvim_replace_termcodes("<Plug>NetrwLocalBrowseCheck", true, false, true)
+  local top = vim.fn.line("w0")
+  local bottom = vim.fn.line("w$")
+  local lnum = top
+
+  while lnum <= bottom do
+    local line = vim.fn.getline(lnum)
+    if line:match("/%s*$") and not netrw_is_special_dir(line) then
+      local depth = netrw_tree_depth(line)
+      if depth > 0 and not netrw_is_expanded(lnum, depth) then
+        vim.api.nvim_win_set_cursor(0, { lnum, 0 })
+        vim.fn.feedkeys(open_key, "xt")
+        expanded = expanded + 1
+        bottom = vim.fn.line("w$")
+      end
+    end
+    lnum = lnum + 1
+  end
+
+  vim.fn.winrestview(view)
+  print(("NetrwExpandVisible: expanded %d director%s"):format(expanded, expanded == 1 and "y" or "ies"))
+end
+
+vim.api.nvim_create_user_command("NetrwExpandVisible", netrw_expand_visible, {
+  desc = "Recursively expand collapsed netrw directories visible in the current window",
+})
+
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "netrw",
+  callback = function()
+    -- Always open selected files in the current netrw window.
+    vim.g.netrw_browse_split = 0
+    vim.keymap.set("n", "l", "<CR>", { buffer = true, silent = true })
+    vim.keymap.set("n", "<Leader>e", ":NetrwExpandVisible<CR>", { buffer = true, silent = true })
+  end,
+})
+
 -- ========================== OPTIONS =========================================
 local opt = vim.opt
 
 opt.termguicolors = true
 opt.background    = "dark"
+opt.winblend      = 0
+opt.pumblend      = 0
 opt.backspace     = "indent,eol,start"
 opt.ruler         = true
 opt.splitright    = true
@@ -124,6 +196,16 @@ local function buf_nav(cmd)
   end
 end
 
+local function reload_config()
+  local init = vim.fn.stdpath("config") .. "/init.lua"
+  local ok, err = pcall(dofile, init)
+  if ok then
+    vim.notify("Reloaded " .. init, vim.log.levels.INFO)
+  else
+    vim.notify("Reload failed: " .. err, vim.log.levels.ERROR)
+  end
+end
+
 local function yaml_tree()
   local list = {}
   local cur = vim.fn.getcurpos()[2]
@@ -141,6 +223,7 @@ local function yaml_tree()
 end
 
 vim.api.nvim_create_user_command("YAMLTree", yaml_tree, {})
+vim.api.nvim_create_user_command("ReloadConfig", reload_config, {})
 
 -- Interactive join separator (global state)
 vim.g.last_join_separator = " "
@@ -164,7 +247,8 @@ command! -bang -nargs=* -range LineBreakAt <line1>,<line2>call LineBreakAt('<ban
 ]])
 
 -- ========================== PLUGINS (lazy.nvim) ==============================
-require("lazy").setup({
+if not vim.g._lazy_setup_done then
+  require("lazy").setup({
 
   -- ···················· Dependencies ····················
   { "nvim-tree/nvim-web-devicons", lazy = true },
@@ -234,22 +318,6 @@ require("lazy").setup({
     },
   },
 
-  -- ···················· File Explorer (replaces netrw) ····················
-  {
-    "stevearc/oil.nvim",
-    dependencies = { "nvim-tree/nvim-web-devicons" },
-    config = function()
-      require("oil").setup({
-        view_options = { show_hidden = true },
-        keymaps = {
-          ["l"] = "actions.select",
-          ["h"] = "actions.parent",
-          ["q"] = "actions.close",
-        },
-      })
-    end,
-  },
-
   -- ···················· Editing ····················
   { "kylechui/nvim-surround", version = "*", event = "VeryLazy", opts = {} },
   { "tpope/vim-repeat" },
@@ -316,7 +384,8 @@ require("lazy").setup({
           "pyright",    -- Python
           "eslint",     -- ESLint
           "lua_ls",     -- Lua (for editing this config)
-          "ruby_lsp",  -- Ruby
+          "copilot",    -- Copilot LSP (for sidekick.nvim NES)
+          -- ruby_lsp removed: install via `gem install ruby-lsp` in your Ruby env
         },
         automatic_installation = true,
       })
@@ -392,9 +461,10 @@ require("lazy").setup({
     "stevearc/conform.nvim",
     event = "BufWritePre",
     config = function()
+      local has_ruff = vim.fn.executable("ruff") == 1
       require("conform").setup({
         formatters_by_ft = {
-          python            = { "ruff_fix", "ruff_format" },
+          python            = has_ruff and { "ruff_fix", "ruff_format" } or {},
           typescript        = { "prettier" },
           typescriptreact   = { "prettier" },
           javascript        = { "prettier" },
@@ -415,8 +485,9 @@ require("lazy").setup({
     "mfussenegger/nvim-lint",
     event = { "BufReadPre", "BufNewFile" },
     config = function()
+      local has_ruff = vim.fn.executable("ruff") == 1
       require("lint").linters_by_ft = {
-        python = { "ruff" },
+        python = has_ruff and { "ruff" } or {},
       }
       vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost" }, {
         callback = function() require("lint").try_lint() end,
@@ -444,59 +515,9 @@ require("lazy").setup({
 
   -- ···················· Theme ····················
   {
-    "catppuccin/nvim",
-    name = "catppuccin",
+    "dasupradyumna/midnight.nvim",
+    lazy = false,
     priority = 1000,
-    config = function()
-      require("catppuccin").setup({
-        flavour = "mocha",
-        transparent_background = false,
-        integrations = {
-          gitsigns = true,
-          mason = true,
-          cmp = true,
-          treesitter = true,
-          flash = true,
-          indent_blankline = { enabled = true },
-          native_lsp = {
-            enabled = true,
-            virtual_text = {
-              errors      = { "italic" },
-              hints       = { "italic" },
-              warnings    = { "italic" },
-              information = { "italic" },
-            },
-          },
-        },
-        custom_highlights = function(colors)
-          return {
-            -- Match original .vimrc highlights
-            Visual       = { style = { "bold" }, bg = colors.green, fg = colors.base },
-            CursorLine   = { style = { "underline" }, bg = "NONE" },
-            Comment      = { style = { "italic" }, fg = "#95989d" },    -- exact .vimrc color
-            LineNr       = { fg = colors.overlay0, bg = "NONE" },
-            SignColumn   = { bg = "NONE" },
-            NormalFloat  = { bg = colors.base },
-
-            -- Git sign colors (match old vim-signify highlights)
-            GitSignsAdd          = { fg = colors.green },
-            GitSignsChange       = { fg = colors.yellow },
-            GitSignsDelete       = { fg = colors.red },
-            DiffAdd              = { bg = "#415d41" },                  -- exact .vimrc color
-            DiffChange           = { bg = "#685a22" },                  -- exact .vimrc color
-            DiffDelete           = { bg = "#682b22" },                  -- exact .vimrc color
-
-            -- Ruby (treesitter equivalents of old syntax links)
-            ["@keyword.function.ruby"]  = { fg = colors.red, style = { "italic" } },
-            ["@module.ruby"]            = { fg = colors.mauve },
-            ["@string.ruby"]            = { fg = colors.green },
-            ["@string.special.ruby"]    = { fg = colors.yellow },
-            ["@variable.parameter.ruby"] = { fg = colors.blue },
-          }
-        end,
-      })
-      vim.cmd.colorscheme("catppuccin")
-    end,
   },
 
   -- ···················· Statusline (replaces Lightline/Airline) ·············
@@ -506,7 +527,7 @@ require("lazy").setup({
     config = function()
       require("lualine").setup({
         options = {
-          theme = "catppuccin",
+          theme = "auto",
           component_separators = "",
           section_separators = "",
         },
@@ -518,7 +539,35 @@ require("lazy").setup({
             "diff",
             "diagnostics",
           },
-          lualine_x = {},
+          lualine_x = {
+            -- Sidekick CLI session indicator
+            {
+              function()
+                local status = require("sidekick.status").cli()
+                return " " .. (#status > 1 and #status or "")
+              end,
+              cond = function()
+                local ok, status = pcall(require, "sidekick.status")
+                return ok and #status.cli() > 0
+              end,
+              color = "Special",
+            },
+            -- Copilot NES status
+            {
+              function() return " " end,
+              color = function()
+                local status = require("sidekick.status").get()
+                if status then
+                  if status.kind == "Error" then return "DiagnosticError" end
+                  return status.busy and "DiagnosticWarn" or "Special"
+                end
+              end,
+              cond = function()
+                local ok, status = pcall(require, "sidekick.status")
+                return ok and status.get() ~= nil
+              end,
+            },
+          },
           lualine_y = { "progress" },
           lualine_z = { "location" },
         },
@@ -562,19 +611,178 @@ require("lazy").setup({
   -- ···················· Utilities ····················
   { "airblade/vim-localorie", ft = { "yaml", "eruby" } },
 
+  -- ···················· AI (sidekick.nvim) ····················
+  {
+    "folke/sidekick.nvim",
+    event = "VeryLazy",
+    opts = {
+      nes = { enabled = true },
+      cli = {
+        win = {
+          layout = "right",
+          split = {
+            width = 80,
+            height = 0,
+          },
+          wo = {
+            winfixwidth = false,
+            winfixheight = false,
+          },
+          keys = {
+            stopinsert = { "<C-\\><C-n>", "stopinsert", mode = "t", desc = "enter normal mode" },
+            -- Let vim-tmux-navigator own <C-h/j/k/l> in terminal buffers.
+            nav_left = false,
+            nav_down = false,
+            nav_up = false,
+            nav_right = false,
+          },
+        },
+        mux = {
+          backend = "tmux",
+          enabled = true,
+        },
+        tools = {
+          aider = false,
+          amazon_q = false,
+          claude = false,
+          copilot = false,
+          crush = false,
+          cursor = false,
+          gemini = false,
+          grok = false,
+          opencode = false,
+          qwen = false,
+        },
+      },
+    },
+    keys = {
+      {
+        "<C-.>",
+        function()
+          local win = require("sidekick.config").cli.win
+          if vim.bo.filetype == "alpha" then
+            win.layout = "float"
+            win.float = vim.tbl_deep_extend("force", win.float or {}, {
+              width = 1.0,
+              height = 1.0,
+              row = 0,
+              col = 0,
+              border = "none",
+              title = "",
+            })
+          else
+            win.layout = "right"
+            win.split = vim.tbl_deep_extend("force", win.split or {}, {
+              width = 80,
+              height = 0,
+            })
+          end
+          require("sidekick.cli").close({ name = "codex" })
+          require("sidekick.cli").show({ name = "codex", focus = true })
+        end,
+        desc = "Sidekick Toggle Codex",
+        mode = { "n", "t", "i", "x" },
+      },
+      {
+        "<leader>aa",
+        function()
+          local win = require("sidekick.config").cli.win
+          if vim.bo.filetype == "alpha" then
+            win.layout = "float"
+            win.float = vim.tbl_deep_extend("force", win.float or {}, {
+              width = 1.0,
+              height = 1.0,
+              row = 0,
+              col = 0,
+              border = "none",
+              title = "",
+            })
+          else
+            win.layout = "right"
+            win.split = vim.tbl_deep_extend("force", win.split or {}, {
+              width = 80,
+              height = 0,
+            })
+          end
+          require("sidekick.cli").close({ name = "codex" })
+          require("sidekick.cli").show({ name = "codex", focus = true })
+        end,
+        desc = "Sidekick Open Codex",
+      },
+      {
+        "<leader>ad",
+        function() require("sidekick.cli").close() end,
+        desc = "Detach CLI Session",
+      },
+      {
+        "<leader>ac",
+        function() require("sidekick.cli").close() end,
+        desc = "Close CLI Session",
+      },
+      {
+        "<leader>at",
+        function() require("sidekick.cli").send({ msg = "{this}" }) end,
+        mode = { "x", "n" },
+        desc = "Send This",
+      },
+      {
+        "<leader>af",
+        function() require("sidekick.cli").send({ msg = "{file}" }) end,
+        desc = "Send File",
+      },
+      {
+        "<leader>av",
+        function() require("sidekick.cli").send({ msg = "{selection}" }) end,
+        mode = { "x" },
+        desc = "Send Visual Selection",
+      },
+      {
+        "<leader>ap",
+        function() require("sidekick.cli").prompt() end,
+        mode = { "n", "x" },
+        desc = "Select Prompt",
+      },
+      {
+        "<leader>uN",
+        function() require("sidekick.nes").toggle() end,
+        desc = "Toggle NES",
+      },
+    },
+  },
+
 }, {
   -- Lazy.nvim options
-  install = { colorscheme = { "catppuccin" } },
+  install = { colorscheme = { "midnight" } },
   checker = { enabled = false },
   performance = {
     rtp = {
       disabled_plugins = {
-        "gzip", "matchit", "matchparen", "netrwPlugin",
+        "gzip", "matchit", "matchparen",
         "tarPlugin", "tohtml", "tutor", "zipPlugin",
       },
     },
   },
-})
+  })
+  vim.g._lazy_setup_done = true
+end
+
+local function apply_colorscheme(name)
+  if pcall(vim.cmd.colorscheme, name) then
+    return
+  end
+
+  local ok_lazy, lazy = pcall(require, "lazy")
+  if ok_lazy then
+    pcall(lazy.load, { plugins = { "midnight.nvim", "dasupradyumna/midnight.nvim" } })
+    if pcall(vim.cmd.colorscheme, name) then
+      return
+    end
+  end
+
+  vim.notify(("Failed to load colorscheme '%s'"):format(name), vim.log.levels.WARN)
+end
+
+apply_colorscheme("midnight")
 
 -- ========================== LSP (Neovim 0.11 native API) ====================
 -- Global capabilities for all servers (from cmp-nvim-lsp)
@@ -598,7 +806,7 @@ vim.lsp.config("lua_ls", {
 })
 
 -- Enable all language servers
-vim.lsp.enable({ "gopls", "ts_ls", "pyright", "eslint", "lua_ls", "ruby_lsp" })
+vim.lsp.enable({ "gopls", "ts_ls", "pyright", "eslint", "lua_ls", "ruby_lsp", "copilot" })
 
 -- LSP keymaps via LspAttach autocmd
 vim.api.nvim_create_autocmd("LspAttach", {
@@ -659,8 +867,8 @@ end
 map("n", "X", "yydd", { noremap = true })   -- cut line (yank + delete)
 map("n", "Y", "^y$",  { noremap = true })   -- yank to EOL
 
--- ---- Paste from yank register ----
-map("n", "<leader>r", 'viw"0p')
+-- ---- Reload config ----
+map("n", "<leader>r", "<cmd>ReloadConfig<CR>", { noremap = true, silent = true, desc = "Reload init.lua" })
 
 -- ---- Delete empty lines in visual ----
 map("v", "de", ":g/^\\s*$/d<CR>:noh<CR>", { noremap = true, silent = true })
@@ -698,7 +906,11 @@ map("v", "du", "yp", { noremap = true })
 
 -- Buffer navigation with auto-save
 map("n", "<leader><tab>", buf_nav("b#"),        { silent = true })
-map("n", "<tab>",         buf_nav("bnext"),     { silent = true })
+map("n", "<tab>", function()
+  local ok, sk = pcall(require, "sidekick")
+  if ok and sk.nes_jump_or_apply() then return end
+  buf_nav("bnext")()
+end, { silent = true, desc = "NES or Next Buffer" })
 map("n", "<s-tab>",       buf_nav("bprevious"), { silent = true })
 
 -- Switch pane
@@ -789,8 +1001,8 @@ end)
 map("n", "<C-n>", ":cn<CR>")
 map("n", "<C-p>", ":cp<CR>")
 
--- File explorer (oil.nvim)
-map("n", "<leader>t", function() require("oil").open() end)
+-- File explorer (netrw)
+map("n", "<leader>t", ":Explore<CR>", { silent = true })
 
 -- Comment toggle (Comment.nvim)
 map("n", "<leader>/", "gcc", { remap = true, silent = true })
@@ -857,6 +1069,47 @@ map("i", "<C-c>", "<C-c><cmd>doautocmd InsertLeave<CR>", { noremap = true })
 
 -- B command for buffer delete is defined in fzf.vim plugin config above
 
+-- Sidekick terminal: force pane navigation keys to run tmux-navigator commands
+-- as Lua actions so they never get inserted as terminal text.
+local function sidekick_nav_override(bufnr)
+  if not vim.api.nvim_buf_is_valid(bufnr) then return end
+  if vim.b[bufnr].sidekick_nav_mapped then return end
+  local is_sidekick = vim.b[bufnr].sidekick_cli ~= nil or vim.bo[bufnr].filetype == "sidekick_terminal"
+  if not is_sidekick then return end
+
+  local nav = function(cmd)
+    return function()
+      pcall(vim.cmd.stopinsert)
+      vim.cmd[cmd]()
+    end
+  end
+
+  local opts = { buffer = bufnr, silent = true, desc = "Sidekick pane navigation" }
+  vim.keymap.set({ "n", "t" }, "<C-h>", nav("TmuxNavigateLeft"), opts)
+  vim.keymap.set({ "n", "t" }, "<C-j>", nav("TmuxNavigateDown"), opts)
+  vim.keymap.set({ "n", "t" }, "<C-k>", nav("TmuxNavigateUp"), opts)
+  vim.keymap.set({ "n", "t" }, "<C-l>", nav("TmuxNavigateRight"), opts)
+  vim.b[bufnr].sidekick_nav_mapped = true
+end
+
+local function sidekick_force_insert(bufnr)
+  if not vim.api.nvim_buf_is_valid(bufnr) then return end
+  local is_sidekick = vim.b[bufnr].sidekick_cli ~= nil or vim.bo[bufnr].filetype == "sidekick_terminal"
+  if not is_sidekick then return end
+  if vim.api.nvim_get_current_buf() ~= bufnr then return end
+  pcall(vim.cmd.startinsert)
+end
+
+vim.api.nvim_create_autocmd({ "TermOpen", "BufEnter", "WinEnter", "TermEnter" }, {
+  callback = function(ev)
+    -- Run late so these mappings override sidekick/vim-tmux-navigator defaults.
+    vim.schedule(function()
+      sidekick_nav_override(ev.buf)
+      sidekick_force_insert(ev.buf)
+    end)
+  end,
+})
+
 -- ========================== COMMAND ABBREVIATIONS ============================
 vim.cmd([[
   cnoreabbrev rg    Rg
@@ -866,7 +1119,7 @@ vim.cmd([[
   cnoreabbrev QQ    FZFMru
   cnoreabbrev Q     History
   cnoreabbrev ..    cd ..
-  cnoreabbrev sv    source ~/.config/nvim/init.lua
+  cnoreabbrev <expr> sv getcmdtype() == ':' && getcmdline() == 'sv' ? 'ReloadConfig' : 'sv'
   cnoreabbrev ve    vsplit ~/.config/nvim/init.lua
   cnoreabbrev ze    vsplit ~/.zshrc
   cnoreabbrev te    vsplit ~/.tc_settings
@@ -918,18 +1171,18 @@ autocmd({ "FocusGained", "BufEnter" }, {
   end,
 })
 
--- Tmux window rename (uses table form to avoid shell injection on special filenames)
+-- Tmux window rename (only when tmux window name is empty or default shell name)
 autocmd("BufEnter", {
   callback = function()
-    if vim.env.TMUX then
-      vim.fn.system({ "tmux", "rename-window", vim.fn.expand("%:t") })
-    end
-  end,
-})
-autocmd("VimLeave", {
-  callback = function()
-    if vim.env.TMUX then
-      vim.fn.system({ "tmux", "setw", "automatic-rename" })
+    if not vim.env.TMUX then return end
+
+    local file_name = vim.fn.expand("%:t")
+    if file_name == "" then return end
+
+    local current_name = vim.fn.systemlist({ "tmux", "display-message", "-p", "#W" })[1] or ""
+    current_name = vim.trim(current_name)
+    if current_name == "" or current_name == "zsh" then
+      vim.fn.system({ "tmux", "rename-window", file_name })
     end
   end,
 })
@@ -953,15 +1206,6 @@ autocmd("BufReadPre", {
     end
   end,
 })
-
--- ========================== NETRW FALLBACK ==================================
--- These apply if oil.nvim fails to load for any reason
-vim.g.netrw_preview      = 1
-vim.g.netrw_liststyle    = 3
-vim.g.netrw_banner       = 0
-vim.g.netrw_browse_split = 0
-vim.g.netrw_winsize      = 25
-vim.g.netrw_keepdir      = 1
 
 -- ============================================================================
 -- vim: set foldmethod=marker foldlevel=0:

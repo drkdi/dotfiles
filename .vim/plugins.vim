@@ -101,8 +101,6 @@ if has('nvim')
 endif
 
 " --- Theme/UI ---
-Plug 'vim-airline/vim-airline'
-Plug 'vim-airline/vim-airline-themes'
 Plug 'catppuccin/vim', { 'as': 'catppuccin' }
 " REMOVED: Unused themes (uncomment if needed)
 " Plug 'cocopon/iceberg.vim'

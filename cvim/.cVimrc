@@ -27,7 +27,7 @@ let qmark w = ["https://www.netflix.com/", "https://www.hulu.com/", "https://pla
 let qmark p = ["https://passwords.google.com/?hl=en-US"]
 
 ""https://www.amazon.com/*"
-let blacklists = ["*https://remotedesktop.google.com/*"]
+let blacklists = ["*://remotedesktop.google.com/*", "https://leetcode.com/*", "ttps://neetcode.io/*"]
 
 
 map a :tabnew<space>
@@ -50,8 +50,8 @@ map mm muteTab
 map r reloadTabUncached
 map R :call nextPage<CR>
 map s scrollPageUp
-map t :buffer<space>
-map T :buffer<Space>
+map t tabnew
+map T :restore<Space>
 map q goToInput
 map Q :buffer<Space>
 map w previousTab
@@ -65,13 +65,15 @@ map , :settings<CR>
 map = zoomPageIn
 map - zoomPageOut
 
+unmap n
+
 imap <C-d> forwardChar
 map <C-j> backwardChar
 map <C-k> forwardChar
 imap <C-s> backwardChar
 imap <C-f> forwardWord
 "set ma to mark location a
-"map A :tabattach (autocQAomplete)
+"map A :tabattach (autocomplete)
 "map z lastUsedTab
 "map Z :open<space>
 "map f createActiveTabbedHint

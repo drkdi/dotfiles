@@ -46,7 +46,6 @@ readonly MACOS_PRESS_AND_HOLD=false
 DOTFILES=(
     # Shell
     "$HOME/.zshrc:.zshrc"
-    "$HOME/.zshrc.local:.zshrc.local"           # Local overrides (API tokens, etc)
     "$HOME/display-mode:display-mode"
     
     # Editor (Vim fallback — regular Vim still sources this)
@@ -57,9 +56,6 @@ DOTFILES=(
     
     # Git
     "$HOME/.gitconfig:.gitconfig"
-    
-    # Terminal emulator (root location)
-    "$HOME/.alacritty.toml:.alacritty.toml"
     
     # Package list
     "$HOME/.brew:.brew"
@@ -77,9 +73,6 @@ DOTFILE_DIRS=(
     
     # Terminal emulator (standard location)
     "$HOME/.config/alacritty/alacritty.toml:.config/alacritty/alacritty.toml"
-    
-    # Starship prompt
-    "$HOME/.config/starship.toml:.config/starship.toml"
     
     # Global gitignore
     "$HOME/.gitignore_global:.gitignore_global"
