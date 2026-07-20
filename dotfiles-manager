@@ -32,11 +32,82 @@ readonly LOG_FILE="$HOME/.dotfiles-manager.log"
 readonly SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 readonly DOTFILES_REPO="${DOTFILES_REPO:-$SCRIPT_DIR}"
 
-# macOS keyboard repeat defaults for new-machine setup.
-# These are faster than the normal System Settings minimums.
-readonly MACOS_INITIAL_KEY_REPEAT=10
-readonly MACOS_KEY_REPEAT=1
-readonly MACOS_PRESS_AND_HOLD=false
+# Reviewed, portable macOS preferences captured from the source Mac.
+# Format: domain|key|type|value. Hardware IDs, recent items, managed settings,
+# privacy permissions, and unset values are intentionally excluded.
+MACOS_DEFAULTS=(
+    # Global keyboard and trackpad behavior
+    "-g|InitialKeyRepeat|int|10"
+    "-g|KeyRepeat|int|1"
+    "-g|ApplePressAndHoldEnabled|bool|false"
+    "-g|AppleShowAllExtensions|bool|true"
+    "-g|NSAutomaticCapitalizationEnabled|bool|true"
+    "-g|NSAutomaticPeriodSubstitutionEnabled|bool|true"
+    "-g|com.apple.trackpad.scaling|float|3"
+
+    # Built-in trackpad
+    "com.apple.AppleMultitouchTrackpad|ActuateDetents|int|1"
+    "com.apple.AppleMultitouchTrackpad|Clicking|int|1"
+    "com.apple.AppleMultitouchTrackpad|DragLock|int|0"
+    "com.apple.AppleMultitouchTrackpad|Dragging|int|0"
+    "com.apple.AppleMultitouchTrackpad|FirstClickThreshold|int|1"
+    "com.apple.AppleMultitouchTrackpad|ForceSuppressed|int|0"
+    "com.apple.AppleMultitouchTrackpad|SecondClickThreshold|int|1"
+    "com.apple.AppleMultitouchTrackpad|TrackpadCornerSecondaryClick|int|0"
+    "com.apple.AppleMultitouchTrackpad|TrackpadFiveFingerPinchGesture|int|0"
+    "com.apple.AppleMultitouchTrackpad|TrackpadFourFingerHorizSwipeGesture|int|0"
+    "com.apple.AppleMultitouchTrackpad|TrackpadFourFingerPinchGesture|int|0"
+    "com.apple.AppleMultitouchTrackpad|TrackpadFourFingerVertSwipeGesture|int|0"
+    "com.apple.AppleMultitouchTrackpad|TrackpadHandResting|int|1"
+    "com.apple.AppleMultitouchTrackpad|TrackpadHorizScroll|int|1"
+    "com.apple.AppleMultitouchTrackpad|TrackpadMomentumScroll|int|1"
+    "com.apple.AppleMultitouchTrackpad|TrackpadPinch|int|1"
+    "com.apple.AppleMultitouchTrackpad|TrackpadRightClick|int|1"
+    "com.apple.AppleMultitouchTrackpad|TrackpadRotate|int|1"
+    "com.apple.AppleMultitouchTrackpad|TrackpadScroll|int|1"
+    "com.apple.AppleMultitouchTrackpad|TrackpadThreeFingerDrag|int|0"
+    "com.apple.AppleMultitouchTrackpad|TrackpadThreeFingerHorizSwipeGesture|int|0"
+    "com.apple.AppleMultitouchTrackpad|TrackpadThreeFingerTapGesture|int|0"
+    "com.apple.AppleMultitouchTrackpad|TrackpadThreeFingerVertSwipeGesture|int|0"
+    "com.apple.AppleMultitouchTrackpad|TrackpadTwoFingerDoubleTapGesture|int|1"
+    "com.apple.AppleMultitouchTrackpad|TrackpadTwoFingerFromRightEdgeSwipeGesture|int|0"
+    "com.apple.AppleMultitouchTrackpad|USBMouseStopsTrackpad|int|0"
+
+    # Bluetooth trackpad
+    "com.apple.driver.AppleBluetoothMultitouch.trackpad|Clicking|int|1"
+    "com.apple.driver.AppleBluetoothMultitouch.trackpad|DragLock|int|0"
+    "com.apple.driver.AppleBluetoothMultitouch.trackpad|Dragging|int|0"
+    "com.apple.driver.AppleBluetoothMultitouch.trackpad|TrackpadCornerSecondaryClick|int|0"
+    "com.apple.driver.AppleBluetoothMultitouch.trackpad|TrackpadFiveFingerPinchGesture|int|0"
+    "com.apple.driver.AppleBluetoothMultitouch.trackpad|TrackpadFourFingerHorizSwipeGesture|int|0"
+    "com.apple.driver.AppleBluetoothMultitouch.trackpad|TrackpadFourFingerPinchGesture|int|0"
+    "com.apple.driver.AppleBluetoothMultitouch.trackpad|TrackpadFourFingerVertSwipeGesture|int|0"
+    "com.apple.driver.AppleBluetoothMultitouch.trackpad|TrackpadHandResting|int|1"
+    "com.apple.driver.AppleBluetoothMultitouch.trackpad|TrackpadHorizScroll|int|1"
+    "com.apple.driver.AppleBluetoothMultitouch.trackpad|TrackpadMomentumScroll|int|1"
+    "com.apple.driver.AppleBluetoothMultitouch.trackpad|TrackpadPinch|int|1"
+    "com.apple.driver.AppleBluetoothMultitouch.trackpad|TrackpadRightClick|int|1"
+    "com.apple.driver.AppleBluetoothMultitouch.trackpad|TrackpadRotate|int|1"
+    "com.apple.driver.AppleBluetoothMultitouch.trackpad|TrackpadScroll|int|1"
+    "com.apple.driver.AppleBluetoothMultitouch.trackpad|TrackpadThreeFingerDrag|int|0"
+    "com.apple.driver.AppleBluetoothMultitouch.trackpad|TrackpadThreeFingerHorizSwipeGesture|int|0"
+    "com.apple.driver.AppleBluetoothMultitouch.trackpad|TrackpadThreeFingerTapGesture|int|0"
+    "com.apple.driver.AppleBluetoothMultitouch.trackpad|TrackpadThreeFingerVertSwipeGesture|int|0"
+    "com.apple.driver.AppleBluetoothMultitouch.trackpad|TrackpadTwoFingerDoubleTapGesture|int|1"
+    "com.apple.driver.AppleBluetoothMultitouch.trackpad|TrackpadTwoFingerFromRightEdgeSwipeGesture|int|0"
+    "com.apple.driver.AppleBluetoothMultitouch.trackpad|USBMouseStopsTrackpad|int|0"
+
+    # Dock and hot corner behavior
+    "com.apple.dock|autohide|bool|true"
+    "com.apple.dock|tilesize|int|73"
+    "com.apple.dock|show-recents|bool|false"
+    "com.apple.dock|wvous-br-corner|int|1"
+    "com.apple.dock|wvous-br-modifier|int|0"
+
+    # Finder behavior
+    "com.apple.finder|FXPreferredViewStyle|string|Nlsv"
+    "com.apple.finder|NewWindowTarget|string|PfAF"
+)
 
 # ============================================================================
 # FILES TO BACKUP
@@ -257,6 +328,32 @@ safe_copy() {
         cp "$src" "$dest"
     fi
     success "Copied: $(basename "$src")"
+}
+
+configure_macos_defaults() {
+    if ! is_macos; then
+        warn "Skipping macOS preferences on non-macOS system"
+        return 0
+    fi
+
+    header "Configuring macOS preferences"
+    local setting domain key type value
+    for setting in "${MACOS_DEFAULTS[@]}"; do
+        IFS='|' read -r domain key type value <<< "$setting"
+        if $DRY_RUN; then
+            step "[dry-run] Would set $domain $key ($type) to $value"
+        else
+            defaults write "$domain" "$key" "-$type" "$value"
+        fi
+    done
+
+    if $DRY_RUN; then
+        step "[dry-run] Would restart Dock and Finder"
+    else
+        killall Dock 2>/dev/null || true
+        killall Finder 2>/dev/null || true
+        success "macOS preferences applied (some trackpad changes may require logout)"
+    fi
 }
 
 confirm() {
@@ -547,7 +644,7 @@ setup_new_machine() {
     info "This will:"
     echo "  1. Install Homebrew (if not installed)"
     echo "  2. Install essential packages and apps via Homebrew"
-    echo "  3. Configure keyboard settings (fast repeat)"
+    echo "  3. Configure saved macOS keyboard, trackpad, Dock, and Finder settings"
     echo "  4. Restore dotfiles from the repository or backup"
     echo "  5. Install fonts and the BetterTouchTool preset"
     echo "  6. Bootstrap Neovim and tmux plugins"
@@ -628,19 +725,8 @@ setup_new_machine() {
         success "Packages installed"
     fi
     
-    # 3. Keyboard settings (macOS)
-    if is_macos; then
-        header "Configuring keyboard"
-        if $DRY_RUN; then
-            step "[dry-run] Would configure keyboard repeat settings"
-        else
-            info "Setting fast key repeat..."
-            defaults write -g InitialKeyRepeat -int "$MACOS_INITIAL_KEY_REPEAT"
-            defaults write -g KeyRepeat -int "$MACOS_KEY_REPEAT"
-            defaults write -g ApplePressAndHoldEnabled -bool "$MACOS_PRESS_AND_HOLD"
-            success "Keyboard configured (may require logout)"
-        fi
-    fi
+    # 3. Saved macOS preferences
+    configure_macos_defaults
     
     # 4. Restore dotfiles before bootstrapping dependent tools
     header "Restoring dotfiles"
