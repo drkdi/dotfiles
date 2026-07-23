@@ -165,6 +165,13 @@ PERSONAL_FILES=(
 PERSONAL_DIRS=(
     # Tmuxinator workspace configs (if you use them)
     "$HOME/.config/tmuxinator:.config/tmuxinator"
+
+    # Reviewed private shell helpers; excludes ~/.zshrc.local and secrets.
+    "$HOME/.config/dotfiles-private:.config/dotfiles-private"
+
+    # Personal Codex skills may contain company-specific workflows. Keep them
+    # in the private transfer archive and never stage them in the public repo.
+    "$HOME/.codex/skills:.codex/skills"
 )
 
 # Brew packages to install (fallback if ~/.brew doesn't exist)
@@ -191,6 +198,10 @@ BREW_ESSENTIAL=(
     "git"
     "node"
     "python@3.9"
+    "awscli"
+    "k9s"
+    "kubernetes-cli"
+    "snowflake-cli"
     
     # Utilities
     "bat"              # Better cat with syntax highlighting
@@ -201,12 +212,12 @@ BREW_ESSENTIAL=(
     
     # Fun
     "cmatrix"
-    "spotify-tui"
 )
 
 BREW_CASKS=(
     "alacritty"
     "bettertouchtool"
+    "tailscale-app"
 )
 
 # ============================================================================
@@ -690,18 +701,25 @@ setup_new_machine() {
 
         if [[ -n "$brew_file" ]]; then
             info "Installing packages from $brew_file..."
+            local package_failures=0
             while IFS= read -r line || [[ -n "$line" ]]; do
                 local pkg="${line%%#*}"
                 pkg="${pkg#"${pkg%%[![:space:]]*}"}"
                 pkg="${pkg%"${pkg##*[![:space:]]}"}"
                 [[ -z "$pkg" ]] && continue
-                if brew list "$pkg" &>/dev/null; then
+                if brew list "$pkg" </dev/null &>/dev/null; then
                     step "$pkg (already installed)"
                 else
                     step "Installing $pkg..."
-                    brew install "$pkg" 2>/dev/null || warn "Failed to install $pkg"
+                    if ! brew install "$pkg" </dev/null 2>/dev/null; then
+                        warn "Failed to install $pkg"
+                        ((package_failures += 1))
+                    fi
                 fi
             done < "$brew_file"
+            if (( package_failures > 0 )); then
+                warn "$package_failures package(s) failed to install"
+            fi
         else
             info "Installing essential packages..."
             for pkg in "${BREW_ESSENTIAL[@]}"; do

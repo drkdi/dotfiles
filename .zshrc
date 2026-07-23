@@ -53,7 +53,7 @@ export TERM="xterm-256color"
 export EDITOR='nvim'
 export PAGER="less -S"
 export PSQL_PAGER="less -S"
-export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/.local/bin:/opt/homebrew/bin:/opt/homebrew/sbin:$PATH"
 
 # Keep terminal/tmux titles stable; do not auto-update from shell prompt
 export DISABLE_AUTO_TITLE="true"
@@ -303,10 +303,15 @@ extract() {
 # Source local settings (API tokens, work aliases, machine-specific config)
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
 
+# Source reviewed private workflow helpers restored by a personal backup.
+for private_helper in "$HOME"/.config/dotfiles-private/*.zsh(N); do
+    source "$private_helper"
+done
+
 # Uncomment for profiling: zprof
 
 # Source any env files from ~/.config subdirectories
-for env_file in "$HOME"/.config/*/env; do
+for env_file in "$HOME"/.config/*/env(N); do
     [[ -f "$env_file" ]] || continue
     source "$env_file"
 done

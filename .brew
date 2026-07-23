@@ -40,6 +40,10 @@ lazygit # TUI for git
 
 node
 python@3.9
+awscli
+k9s
+kubernetes-cli
+snowflake-cli
 
 # --- Utilities ---
 
@@ -61,7 +65,7 @@ jq # JSON processor
 # --- Fun ---
 
 cmatrix
-spotify-tui # Spotify CLI (spt)
+# spotify-tui was removed from Homebrew; use the Spotify app or another maintained client.
 
 # --- Optional (uncomment if needed) ---
 
